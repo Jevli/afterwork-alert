@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "moment": "^2.17.0",
+    "node-slack": "0.0.7",
     "node-untappd": "^0.4.1"
   },
   "devDependencies": {},

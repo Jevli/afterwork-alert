@@ -1,5 +1,6 @@
-
 var UntappdClient = require("./node_modules/node-untappd/UntappdClient",false);
+var Slack = require('slack-node');
+var slack = new Slack();
 var _ = require('underscore');
 var moment = require('moment');
 
@@ -10,12 +11,12 @@ var accessToken = "[ your access token goes here ]";
 var loopingTime = 15; // minutes
 var whatIsCountedAsAfterWork = 15 // minutes
 var lookupuser = "jevli";
-var slackWebhookURL = '';
-var channels = [
-  {'channel': '#afterwork-tre', 'city': 'Tampere'},
-  {'channel': '#afterwork-hki', 'city': 'Helsinki'},
-  {'channel': '#afterwork-jkl', 'city': 'Jyväskylä'}
-  ];
+var slackWebhookURL = '[ your webhookurl ]';
+var channels = {
+  'Helsinki': '#afterwork-hki',
+  'Tampere': '#afterwork-tre',
+  'Jyväksylä': '#afterwork-jkl'
+};
 
 // Set to true if you want to see all sort of nasty output on stdout.
 var debug = false;
@@ -39,7 +40,7 @@ untappd.activityFeed(function(err,obj){
    afterwork.push({
    'time': item.created_at,
    'vid': item.venue.venue_id,
-   'name': item.venue.venue_name,
+   'vname': item.venue.venue_name,
    'city': item.venue.location.venue_city,
    'uid': item.user.uid,
    'name': item.user.first_name + ' ' + item.user.last_name
@@ -50,14 +51,14 @@ untappd.activityFeed(function(err,obj){
   var current_time = moment('Sun, 27 Nov 2016 15:51:00 +0000', 'ddd, D MMM YYYY HH:mm:ss +0000').subtract(3, 'd'); // TODO: change to timestamp
 
   var testi = [
-    {'vid': 1, 'name': 'Foo', 'created_at': 'Sun, 27 Nov 2016 15:51:00 +0000'},
-    {'vid': 1, 'name': 'LoL', 'created_at': 'Sun, 27 Nov 2016 15:51:00 +0000'},
-    {'vid': 2, 'name': 'Bar', 'created_at': 'Sun, 27 Nov 2016 15:51:00 +0000'},
-    {'vid': 3, 'name': 'user1', 'created_at': 'Sun, 20 Nov 2016 13:51:00 +0000'},
-    {'vid': 3, 'name': 'user2', 'created_at': 'Sun, 27 Nov 2016 13:51:00 +0000'}
+    {'vid': 1, 'vname': 'bar1', 'name': 'user1', 'city': 'Tampere', 'created_at': 'Sun, 27 Nov 2016 15:51:00 +0000'},
+    {'vid': 1, 'vname': 'bar1', 'name': 'user2', 'city': 'Tampere', 'created_at': 'Sun, 27 Nov 2016 15:51:00 +0000'},
+    {'vid': 2, 'vname': 'bar2', 'name': 'user3', 'city': 'Tampere', 'created_at': 'Sun, 27 Nov 2016 15:51:00 +0000'},
+    {'vid': 3, 'vname': 'bar3', 'name': 'user4', 'city': 'Tampere', 'created_at': 'Sun, 20 Nov 2016 13:51:00 +0000'},
+    {'vid': 3, 'vname': 'bar3', 'name': 'user5', 'city': 'Tampere', 'created_at': 'Sun, 27 Nov 2016 13:51:00 +0000'}
   ]
 
-  testi = _.chain(testi)
+  afterwork = _.chain(testi)
     .filter(function(elem) {
     	return moment(elem.created_at, 'ddd, D MMM YYYY HH:mm:ss +0000').isAfter(current_time);
   	})
@@ -70,8 +71,24 @@ untappd.activityFeed(function(err,obj){
     })
     .value();
 
-  console.log(testi);
-
-  var payload={"text": "This is a line of text in a channel.\nAnd this is another line of text."}
+  // Slack stuff
+  slack.setWebhook(slackWebhookURL); // set url
+  // for every venue, send message
+  for (let venue of afterwork) {
+    // build persons string
+    var persons = "";
+    for(let checkin of venue) {
+      persons += checkin.name + ' ';
+    }
+    // build payload
+    var payload = {
+      'text': 'ravintolassa ' + venue[0].vname + ' ' + venue.length + ' henkilöä afterworkilla ( ' + persons + ')',
+      'channel': channels[venue[0].city],
+      'username': 'SeppoKaljalla'
+    }
+    slack.webhook(payload, function(err, response) {
+      console.log(response);
+    })
+  }
 
 }, {'limit': 50});
