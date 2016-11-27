@@ -1,5 +1,6 @@
 var UntappdClient = require("./node_modules/node-untappd/UntappdClient",false);
 var _ = require('underscore');
+var moment = require('moment');
 
 // Definitions
 var clientId = "[ your api key goes here ]";
@@ -36,6 +37,7 @@ untappd.activityFeed(function(err,obj){
    }*/
 
   // mockup data. parsing this data properly should result to only one afterwork bar (vid: 1)
+  var current_time = moment('Sun, 28 Nov 2016 15:51:00 +0000'); // TODO: change to timestamp
   var testi = [
     {'vid': 1, 'name': 'Foo', 'created_at': 'Sun, 27 Nov 2016 15:51:00 +0000'},
     {'vid': 1, 'name': 'LoL', 'created_at': 'Sun, 27 Nov 2016 15:51:00 +0000'},
