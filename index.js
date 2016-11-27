@@ -45,7 +45,7 @@ untappd.activityFeed(function(err,obj){
 
   testi = _.chain(testi)
     .groupBy(function(elem) {
-    return elem.vid;
+      return elem.vid;
     })
     .values().value();
 
