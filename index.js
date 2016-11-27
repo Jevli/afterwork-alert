@@ -1,3 +1,4 @@
+
 var UntappdClient = require("./node_modules/node-untappd/UntappdClient",false);
 var _ = require('underscore');
 var moment = require('moment');
@@ -6,6 +7,15 @@ var moment = require('moment');
 var clientId = "[ your api key goes here ]";
 var clientSecret = "[ your client secret goes here ]";
 var accessToken = "[ your access token goes here ]";
+var loopingTime = 15; // minutes
+var whatIsCountedAsAfterWork = 15 // minutes
+var lookupuser = "jevli";
+var slackWebhookURL = '';
+var channels = [
+  {'channel': '#afterwork-tre', 'city': 'Tampere'},
+  {'channel': '#afterwork-hki', 'city': 'Helsinki'},
+  {'channel': '#afterwork-jkl', 'city': 'Jyväskylä'}
+  ];
 
 // Set to true if you want to see all sort of nasty output on stdout.
 var debug = false;
@@ -19,7 +29,6 @@ untappd.setClientId(clientId);
 untappd.setClientSecret(clientSecret);
 untappd.setAccessToken(accessToken); // TODO add accessToken adding LATER get accessToken
 
-// repeat 15 minutes
 untappd.activityFeed(function(err,obj){
   //if (debug) console.log(obj, err);
 
@@ -31,6 +40,7 @@ untappd.activityFeed(function(err,obj){
    'time': item.created_at,
    'vid': item.venue.venue_id,
    'name': item.venue.venue_name,
+   'city': item.venue.location.venue_city,
    'uid': item.user.uid,
    'name': item.user.first_name + ' ' + item.user.last_name
    });
@@ -61,5 +71,7 @@ untappd.activityFeed(function(err,obj){
     .value();
 
   console.log(testi);
+
+  var payload={"text": "This is a line of text in a channel.\nAnd this is another line of text."}
 
 }, {'limit': 50});
