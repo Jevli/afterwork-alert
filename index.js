@@ -6,7 +6,7 @@ var clientSecret = "[ your client secret goes here ]";
 var accessToken = "[ your access token goes here ]";
 
 // Set to true if you want to see all sort of nasty output on stdout.
-var debug = true;
+var debug = false;
 
 //The user we want to lookup for this example.
 var lookupuser = "jevli";	
@@ -19,7 +19,33 @@ untappd.setAccessToken(accessToken); // TODO add accessToken adding LATER get ac
 
 // repeat 15 minutes
 untappd.activityFeed(function(err,obj){
-
-    console.log(obj);
+  //if (debug) console.log(obj, err);
   
-}, {'limit': 50} );
+  var afterwork;
+  // Check what counts is really | either this or items.size etc
+  /*if (obj & obj.checkins.count > 0) {
+  	for( var item of obj.items ) {
+    	afterwork.push({
+        'time': item.created_at,
+        'vid': item.venue.venue_id,
+        'name': item.venue.venue_name,
+        'uid': item.user.uid,
+        'name': item.user.first_name + ' ' + item.user.last_name 
+      });
+    }*/
+
+    var testi = [
+      {'vid': 1, 'name': 'Foo'},
+      {'vid': 1, 'name': 'LoL'},
+      {'vid': 2, 'name': 'Bar'},
+      {'vid': 3, 'name': 'user1'},
+      {'vid': 3, 'name': 'user2'}
+    ]
+        
+    testi.map( venue => { venue.count = testi.filter( elem => elem.vid === venue.vid ).length })
+    var tulos = testi.filter( venue => venue.count > 1);
+    console.log(tulos);
+
+    //}
+  
+}, {'limit': 50});
