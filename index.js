@@ -37,7 +37,8 @@ untappd.activityFeed(function(err,obj){
    }*/
 
   // mockup data. parsing this data properly should result to only one afterwork bar (vid: 1)
-  var current_time = moment('Sun, 28 Nov 2016 15:51:00 +0000'); // TODO: change to timestamp
+  var current_time = moment('Sun, 27 Nov 2016 15:51:00 +0000', 'ddd, D MMM YYYY HH:mm:ss +0000').subtract(3, 'd'); // TODO: change to timestamp
+
   var testi = [
     {'vid': 1, 'name': 'Foo', 'created_at': 'Sun, 27 Nov 2016 15:51:00 +0000'},
     {'vid': 1, 'name': 'LoL', 'created_at': 'Sun, 27 Nov 2016 15:51:00 +0000'},
@@ -47,10 +48,16 @@ untappd.activityFeed(function(err,obj){
   ]
 
   testi = _.chain(testi)
+    .filter(function(elem) {
+    	return moment(elem.created_at, 'ddd, D MMM YYYY HH:mm:ss +0000').isAfter(current_time);
+  	})
     .groupBy(function(elem) {
       return elem.vid;
     })
     .values()
+    .filter(function(elem) {
+      return elem.length > 1;
+    })
     .value();
 
   console.log(testi);
