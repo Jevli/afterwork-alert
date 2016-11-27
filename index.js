@@ -43,9 +43,9 @@ untappd.activityFeed(function(err,obj){
     {'vid': 3, 'name': 'user2'}
   ]
 
-  testi = _.groupBy(testi, function(elem) {
+  testi = _.values(_.groupBy(testi, function(elem) {
     return elem.vid;
-  });
+  }));
   console.log(testi);
 
 }, {'limit': 50});
