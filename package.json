@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "moment": "^2.17.0",
     "node-untappd": "^0.4.1"
   },
   "devDependencies": {},

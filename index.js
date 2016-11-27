@@ -35,19 +35,21 @@ untappd.activityFeed(function(err,obj){
    });
    }*/
 
+  // mockup data. parsing this data properly should result to only one afterwork bar (vid: 1)
   var testi = [
-    {'vid': 1, 'name': 'Foo'},
-    {'vid': 1, 'name': 'LoL'},
-    {'vid': 2, 'name': 'Bar'},
-    {'vid': 3, 'name': 'user1'},
-    {'vid': 3, 'name': 'user2'}
+    {'vid': 1, 'name': 'Foo', 'created_at': 'Sun, 27 Nov 2016 15:51:00 +0000'},
+    {'vid': 1, 'name': 'LoL', 'created_at': 'Sun, 27 Nov 2016 15:51:00 +0000'},
+    {'vid': 2, 'name': 'Bar', 'created_at': 'Sun, 27 Nov 2016 15:51:00 +0000'},
+    {'vid': 3, 'name': 'user1', 'created_at': 'Sun, 20 Nov 2016 13:51:00 +0000'},
+    {'vid': 3, 'name': 'user2', 'created_at': 'Sun, 27 Nov 2016 13:51:00 +0000'}
   ]
 
   testi = _.chain(testi)
     .groupBy(function(elem) {
       return elem.vid;
     })
-    .values().value();
+    .values()
+    .value();
 
   console.log(testi);
 
