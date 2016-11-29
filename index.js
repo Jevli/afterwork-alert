@@ -75,7 +75,7 @@ untappd.activityFeed(function(err,obj){
       .values()
       .map(function(elem) {
         return _.uniq(elem, false, function(a) {
-          return a.uid;
+          return a.uid + "--" + a.vid;
         });
       })
       .filter(function(elem) {
