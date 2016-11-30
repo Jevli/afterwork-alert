@@ -10,3 +10,10 @@ Untappd polling periodically and if more than one friend is drinking within smal
 Production mode will use production configs and dev will use development configs.
 * ```npm run prod ```
 * ```npm run dev ```
+
+* Run docker-image
+
+```docker
+    docker build -t afterwork-alert .
+    docker run afterwork-alert
+```
