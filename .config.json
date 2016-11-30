@@ -1,0 +1,16 @@
+{
+  "clientId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "clientSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "accessToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "loopingTime": 30,
+  "whatIsCountedAsAfterWork": { "hours": 0, "minutes": 30 },
+  "lookupuser": "UntappdUserName",
+  "slackWebhookURL": "https://hooks.slack.com/services/xxxxx",
+  "channels" : {
+    "Venue_City1": "#channel1", 
+    "Venue_City2": "#channel2",
+    "Venue_City3": "#channel3"
+  },
+  "botname": "SlackBotName"
+}
+

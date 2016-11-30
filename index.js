@@ -52,7 +52,7 @@ var getAfterworkFeed = function(cb) {
         });
       }
 
-      var earliest_allowed_checkin = moment().subtract(2, 'd'); // TODO: change to timestamp
+      var earliest_allowed_checkin = moment().subtract(whatIsCountedAsAfterWork); // TODO: change to timestamp
 
       afterwork = _.chain(afterwork)
         // Checkin has to be new enough
@@ -111,4 +111,5 @@ getAfterworkFeed(parseAfterWorkAndSendToSlack);
 
 // Custom Slack Bot Stuff
 function startBot() {
+  if (debug) console.log("Bot not yet done");
 };
