@@ -2,7 +2,7 @@ var UntappdClient = require("node-untappd");
 var Slack = require('slack-node');
 var _ = require('underscore');
 var moment = require('moment');
-var config = require('./config');
+var config = require('./config')[process.env.mode];
 
 // Definitions
 var clientId = [ config.clientId ];
@@ -75,7 +75,7 @@ var getAfterworkFeed = function(cb) {
         })
         // Has to have more than one user in same bar
         .filter(function (elem) {
-          return elem.length > 1;
+          return elem.length > 0;
         })
         .value();
 

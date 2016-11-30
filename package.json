@@ -11,6 +11,8 @@
   },
   "devDependencies": {},
   "scripts": {
+    "prod": "mode=prod node index.js",
+    "dev": "mode=dev node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
