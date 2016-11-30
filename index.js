@@ -75,7 +75,7 @@ var getAfterworkFeed = function(cb) {
         })
         // Has to have more than one user in same bar
         .filter(function (elem) {
-          return elem.length > 0;
+          return elem.length > 1;
         })
         .value();
 
