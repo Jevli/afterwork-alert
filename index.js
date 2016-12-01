@@ -75,7 +75,7 @@ var getAfterworkFeed = function(cb) {
         })
         // Has to have more than one user in same bar
         .filter(function (elem) {
-          return elem.length > 1;
+          return elem.length > 0;
         })
         .value();
 
@@ -107,7 +107,11 @@ var parseAfterWorkAndSendToSlack = function(afterwork) {
 };
 
 // Actually call methods
-getAfterworkFeed(parseAfterWorkAndSendToSlack);
+function timer() {
+  getAfterworkFeed(parseAfterWorkAndSendToSlack);
+}
+
+setInterval(timer, 1000);
 
 // Custom Slack Bot Stuff
 function startBot() {
