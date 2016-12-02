@@ -7,6 +7,7 @@
       "whatIsCountedAsAfterWork": { "hours": 0, "minutes": 30 },
       "lookupuser": "UntappdUserName",
       "slackWebhookURL": "https://hooks.slack.com/services/xxxxx",
+      "slackApiToken": "apitoken",
       "channels" : {
         "Venue_City1": "#channel1", 
         "Venue_City2": "#channel2",
@@ -22,6 +23,7 @@
       "whatIsCountedAsAfterWork": { "hours": 0, "minutes": 30 },
       "lookupuser": "UntappdUserName",
       "slackWebhookURL": "https://hooks.slack.com/services/xxxxx",
+      "slackApiToken": "apitoken",
       "channels" : {
         "Venue_City1": "#channel1", 
         "Venue_City2": "#channel2",

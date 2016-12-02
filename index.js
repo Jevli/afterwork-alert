@@ -2,6 +2,8 @@ var UntappdClient = require("node-untappd");
 var Slack = require('slack-node');
 var _ = require('underscore');
 var moment = require('moment');
+var https = require('https');
+var WebSocket = require('ws');
 var config = require('./config')[process.env.mode];
 
 // Definitions
@@ -15,6 +17,8 @@ var slackWebhookURL = config.slackWebhookURL;
 var channels = config.channels;
 var botname = config.botname;
 
+var old;
+
 // Set to true if you want to see all sort of nasty output on stdout.
 var debug = false;
 if (process.argv.length > 2 && process.argv[2] == 'debug') {
@@ -27,7 +31,7 @@ untappd.setClientId(clientId);
 untappd.setClientSecret(clientSecret);
 untappd.setAccessToken(accessToken); // TODO add accessToken adding LATER get accessToken
 // Create Slack Client
-var slack = new Slack();
+var slack = new Slack(config.slackApiToken);
 slack.setWebhook(slackWebhookURL); // set url
 
 var getAfterworkFeed = function(cb) {
@@ -67,6 +71,7 @@ var getAfterworkFeed = function(cb) {
           return elem.vid;
         })
         .values()
+        // Reduce all places where is no updates with diff under 15 minutes
         // Exludes same users drinks in same venue
         .map(function (elem) {
           return _.uniq(elem, false, function (a) {
@@ -111,7 +116,36 @@ function timer() {
   getAfterworkFeed(parseAfterWorkAndSendToSlack);
 }
 
-setInterval(timer, 1000);
+timer();
+//setInterval(timer, loopingTime);
+
+slack.api("rtm.start", function(err, response) {
+  openWebsocket(response.url);
+});
+
+function openWebsocket(url) {
+  var ws = new WebSocket(url);
+
+  ws.on('message', function(message) {
+    console.log(message);
+    message = JSON.parse(message);
+    if (message.type == 'message') {
+      if (message.text.indexOf("@U39NVR4BV")) {
+        console.log(message.text.split(' ')[1]);
+        var untappdId;        
+        untappd.userInfo(function(err, obj){
+          console.log(obj.response.user.uid);
+          untappdId = obj.response.user.uid;
+        }, {"USERNAME" : message.text.split(' ')[1]});
+        // EI TESTATTU OSUUS
+        /*untappd.friendRequest(function (err, obj) {
+          console.log('add friend');
+        }, {'TARGET_ID': untappdId });*/
+      }
+    }
+  });
+}
+
 
 // Custom Slack Bot Stuff
 function startBot() {
