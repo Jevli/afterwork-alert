@@ -17,3 +17,12 @@ Production mode will use production configs and dev will use development configs
     docker build -t afterwork-alert .
     docker run afterwork-alert
 ```
+
+# ToDo
+## Fixes
+* Time between checkins in same venue by different users: Calculate this often but ignore checkins which are used in some 'afterwork-alert' before. Try different approaches when to send new alert. 
+## Features
+### Slackbot commands
+* Tell bot to send friend request in Untappd
+### Untappd data analysis
+* Analyze how many beverages and how high alcohol percentage within certain amount of time. If enough, moralize user in slack at next morning and ask about hangover 
