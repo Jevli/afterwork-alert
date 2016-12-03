@@ -17,8 +17,6 @@ var slackApiToken = config.slackApiToken;
 var channels = config.channels;
 var botname = config.botname;
 
-var old;
-
 // Set to true if you want to see all sort of nasty output on stdout.
 var debug = false;
 if (process.argv.length > 2 && process.argv[2] == 'debug') {
@@ -110,42 +108,71 @@ var parseAfterWorkAndSendToSlack = function(afterwork) {
   }
 };
 
-// Actually call methods
-function timer() {
+// Helper for interval
+var timer = function() {
   getAfterworkFeed(parseAfterWorkAndSendToSlack);
 }
 
-timer();
+// Helper for starting to follow slack
+var followSlack = function () {
+  slack.api('rtm.start', function(err, response) {
+    sendWelcomeMessage();
+    slack.api('auth.test', function(err, res) {
+      listenWebSocket(response.url, res.user_id);
+    });
+  });
+}
+
+// Accual calls for start different parts of application
+followSlack();
+//timer();
 //setInterval(timer, loopingTime);
 
-slack.api("rtm.start", function(err, response) {
-  //var uId = getUserId();
-  //openWebsocket(response.url);
-});
+// Send welcome message to all channels at slack
+var sendWelcomeMessage = function() {
+  Object.keys(channels).forEach(function(city) {
+    slack.api('chat.postMessage', {
+      text: 'Hei jos haluat minun kaveriksi lähetä kanavalle viesti: ```@seppokaljalla {untapdd-username}```',
+      channel: channels[city],
+      username: botname
+    }, function (err, res) {
+      if (debug) console.log(res);
+    });
+  });
+}
 
-function openWebsocket(url) {
+// WebSocker lisner
+var listenWebSocket = function (url, user_id) {
+  if (debug) console.log(url, user_id);
+
   var ws = new WebSocket(url);
 
   ws.on('message', function(message) {
-    console.log(message);
+    if (debug)   console.log(message);
+    
     message = JSON.parse(message);
-    if (message.type == 'message') {
-      if (message.text.indexOf("@U39NVR4BV")) {
-        console.log(message.text.split(' ')[1]);
-        var untappdId;        
-        untappd.userInfo(function(err, obj){
-          console.log(obj.response.user.uid);
-          untappdId = obj.response.user.uid;
-        }, {"USERNAME" : message.text.split(' ')[1]});
-        // EI TESTATTU OSUUS
-        /*untappd.friendRequest(function (err, obj) {
-          console.log('add friend');
-        }, {'TARGET_ID': untappdId });*/
+    
+    if (message.type === 'message' && message.subtype !== 'bot_message') {
+      
+      if (message.text.indexOf(user_id)) {
+        createFriendRequest(message.text.split(' ')[1]);
       }
     }
   });
 }
 
+
+// Create friend request from untappd
+var createFriendRequest = function (user) {
+  untappd.userInfo(function(err, obj){
+    if (debug) console.log(obj.response.user);
+          
+    untappd.requestFriends(function (err, obj) {
+      console.log(obj);
+    }, {'TARGET_ID': obj.response.user.uid });
+
+  }, {"USERNAME" : user});
+}
 
 // Custom Slack Bot Stuff
 function startBot() {
