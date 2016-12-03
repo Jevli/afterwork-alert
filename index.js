@@ -149,23 +149,6 @@ function buildPayload(afterwork) {
   });
 }
 
-// Helper for interval
-var timer = function() {
-  getMockFeed()
-  // getUntappdFeed()
-    .then(parseAfterworkers)
-    .then(buildPayload)
-    .then((resolve, reject) => {
-      slack.api("chat.postMessage", resolve, function (err, response) {
-        log("slack response: ", response);
-      })
-      log("resolve: ", resolve);
-    })
-    .catch((reason) => {
-      log("reason: ", reason);
-    });
-}
-
 // Helper for starting to follow slack
 var followSlack = function () {
   slack.api('rtm.start', function(err, response) {
@@ -234,6 +217,22 @@ function log(...args) {
   })
 }
 
+// Helper for interval
+var timer = function() {
+  getMockFeed()
+  // getUntappdFeed()
+    .then(parseAfterworkers)
+    .then(buildPayload)
+    .then((resolve, reject) => {
+      slack.api("chat.postMessage", resolve, function (err, response) {
+        log("slack response: ", response);
+      })
+      log("resolve: ", resolve);
+    })
+    .catch((reason) => {
+      log("reason: ", reason);
+    });
+}
 
 // Accual calls for start different parts of application
 // followSlack();
