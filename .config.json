@@ -1,34 +1,37 @@
 {
-    "prod": {
-      "clientId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "clientSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "accessToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "loopingTime": 30,
-      "whatIsCountedAsAfterWork": { "hours": 0, "minutes": 30 },
-      "lookupuser": "UntappdUserName",
-      "slackApiToken": "apitoken",
-      "channels" : {
-        "Venue_City1": "#channel1", 
-        "Venue_City2": "#channel2",
-        "Venue_City3": "#channel3"
-      },
-      "botname": "SlackBotName"
+  "prod": {
+    "clientId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "clientSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "accessToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "loopingTime": 30,
+    "whatIsCountedAsAfterWork": { "hours": 0, "minutes": 30 },
+    "lookupuser": "UntappdUserName",
+    "slackApiToken": "apitoken",
+    "channels" : {
+      "Venue_City1": "#channel1",
+      "Venue_City2": "#channel2",
+      "Venue_City3": "#channel3"
     },
-    "dev": {
-      "clientId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "clientSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "accessToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "loopingTime": 30,
-      "whatIsCountedAsAfterWork": { "hours": 0, "minutes": 30 },
-      "lookupuser": "UntappdUserName",
-      "slackApiToken": "apitoken",
-      "channels" : {
-        "Venue_City1": "#channel1", 
-        "Venue_City2": "#channel2",
-        "Venue_City3": "#channel3"
-      },
-      "botname": "SlackBotName"
- ,
+    "botname": "SlackBotName"
+  },
+  "dev": {
+    "clientId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "clientSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "accessToken": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "loopingTime": 30,
+    "whatIsCountedAsAfterWork": {
+      "hours": 0,
+      "minutes": 30
+    },
+    "lookupuser": "UntappdUserName",
+    "slackApiToken": "apitoken",
+    "channels": {
+      "Venue_City1": "#channel1",
+      "Venue_City2": "#channel2",
+      "Venue_City3": "#channel3"
+    },
+    "botname": "SlackBotName"
+  },
   "mockData": [
     { "time": "Thu, 01 Dec 2016 15:00:00 +0000",
       "cid": 1,
@@ -101,6 +104,6 @@
       "city": "",
       "uid": 101,
       "name": "Oskari Ruutiainen" }
-  ]   }
+  ]
 }
 

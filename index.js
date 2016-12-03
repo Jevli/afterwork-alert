@@ -37,7 +37,7 @@ var slack = new Slack(config.slackApiToken);
 function getUntappdFeed() {
   return new Promise((resolve, reject) => {
     untappd.activityFeed(function (err, obj) {
-      if (debug) console.log(obj, err);
+      log(obj, err);
       var afterwork = [];
       // Check what counts is really | either this or items.size etc
       if (obj && obj.response && obj.response.checkins.count > 0) {
@@ -68,52 +68,47 @@ function getMockFeed() {
 function parseAfterworkers(feed) {
   return new Promise((resolve, reject) => {
     var earliest_allowed_checkin = moment().subtract(whatIsCountedAsAfterWork).subtract({months: 2}); // subtract more for debugging
-    if (debug) console.log("feed: ");
-    if (debug) console.log(feed);
-    if (debug) console.log("end of feed: ");
+    log("feed: ", feed, "end of feed");
     afterwork = _.chain(feed)
-      .filter((elem) => {
-        return moment(elem.time, timeFormat).isAfter(earliest_allowed_checkin);
+      .filter((checkin) => {
+        return moment(checkin.time, timeFormat).isAfter(earliest_allowed_checkin);
       })
-      .filter((elem) => {
-        return (usedCids.find((cid) => { cid === elem.cid }) === undefined); // checkin id not used to another aw before
+      .filter((checkin) => {
+        return (!usedCids.includes(checkin.cid)); // checkin id not used to another aw before
       })
       // Has to have venue
-      .filter((elem) => {
-        return elem.vid;
+      .filter((checkin) => {
+        return checkin.vid;
       })
       // Group by venue
-      .groupBy((elem) => {
-        return elem.vid;
+      .groupBy((checkin) => {
+        return checkin.vid;
       })
       .values()
       .map(function (checkInsInOneVenue) { // Do this for all users grouped by venue
-        var foo = checkInsInOneVenue.reduce((a, b) => {
+        return checkInsInOneVenue.reduce((a, b) => {
           if(a.length === 0) { // as first
             a.push(b);
             return a;
           }
-          var isAW = isCountedInAW(a, b); // if not with first, change this to first
-          if(a.length === 1 && !isAW) {
+          var isAW = isCountedInAW(a, b);
+          if(a.length === 1 && !isAW) { // if not with first, change this to first
             a.pop();
             a.push(b);
             return a;
           }
-          if(a.length > 0 && isAW) { // if with previous, add
+          if(a.length > 0 && isAW) { // if aw with previous, add
             a.push(b);
           }
           return a;
         }, []);
-        return foo;
       })
       // Has to have more than one user in same venue
       .filter((elem) => {
         return elem.length > 1;
       })
       .value();
-    if (debug) console.log("parsed afterworkers: ");
-    if (debug) console.log(afterwork);
-    if (debug) console.log("end of parsed afterworkers: ");
+    log("parsed afterworkers: ", afterwork, "end of parsed afterworkers");
     // Add afterwork content to used cids
     afterwork.map((checkinGroups) => {
       checkinGroups.map((checkin) => {
@@ -137,7 +132,7 @@ function isCountedInAW(a, b) {
   return false;
 }
 
-function buildAndSendAwNotifyToSlack(afterwork) {
+function buildPayload(afterwork) {
   return new Promise((resolve, reject) => {
     // for every venue, send message
     for (let venue of afterwork) {
@@ -153,22 +148,25 @@ function buildAndSendAwNotifyToSlack(afterwork) {
         'channel': channels[venue[0].city],
         'username': botname
       }
-      slack.api("chat.postMessage", payload, function (err, response) {
-        if (debug) console.log(response);
-      })
+      resolve(payload);
     }
   });
 }
 
 // Helper for interval
 var timer = function() {
-  getMockFeed()
-  // getUntappdFeed()
+  // getMockFeed()
+  getUntappdFeed()
     .then(parseAfterworkers)
-    // .then(buildAndSendAwNotifyToSlack)
+    .then(buildPayload)
+    .then((resolve, reject) => {
+      slack.api("chat.postMessage", payload, function (err, response) {
+        log("slac response", response);
+      })
+      log("resolve: ", resolve);
+    })
     .catch((reason) => {
-      if (debug) console.log("reason: ");
-      if (debug) console.log(reason);
+      log("reason: ", reason);
     });
 }
 
@@ -184,8 +182,8 @@ var followSlack = function () {
 
 // Accual calls for start different parts of application
 // followSlack();
-timer();
-// setInterval(timer, loopingTime * 1000 * 5);
+// timer();
+setInterval(timer, loopingTime * 1000);
 
 
 // Send welcome message to all channels at slack
@@ -196,20 +194,20 @@ var sendWelcomeMessage = function() {
       channel: channels[city],
       username: botname
     }, function (err, res) {
-      if (debug) console.log(res);
+      log("res: ", res);
     });
   });
 }
 
 // WebSocker lisner
 var listenWebSocket = function (url, user_id) {
-  if (debug) console.log(url, user_id);
+  log(url, user_id);
 
   var ws = new WebSocket(url);
 
   ws.on('message', function(message) {
-    if (debug)   console.log(message);
-    
+    log(message);
+
     message = JSON.parse(message);
     
     if (message.type === 'message' && message.subtype !== 'bot_message') {
@@ -225,10 +223,10 @@ var listenWebSocket = function (url, user_id) {
 // Create friend request from untappd
 var createFriendRequest = function (user) {
   untappd.userInfo(function(err, obj){
-    if (debug) console.log(obj.response.user);
+    log(obj.response.user);
           
     untappd.requestFriends(function (err, obj) {
-      console.log(obj);
+      log(obj);
     }, {'TARGET_ID': obj.response.user.uid });
 
   }, {"USERNAME" : user});
@@ -236,5 +234,12 @@ var createFriendRequest = function (user) {
 
 // Custom Slack Bot Stuff
 function startBot() {
-  if (debug) console.log("Bot not yet done");
+  log("Bot not yet done");
 };
+
+function log(...args) {
+  // could add some real logging to file etc.
+  args.map((arg) => {
+    console.log(arg);
+  })
+}
