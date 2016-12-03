@@ -71,14 +71,9 @@ function parseAfterworkers(feed) {
     log("feed: ", feed, "end of feed");
     afterwork = _.chain(feed)
       .filter((checkin) => {
-        return moment(checkin.time, timeFormat).isAfter(earliest_allowed_checkin);
-      })
-      .filter((checkin) => {
-        return (!usedCids.includes(checkin.cid)); // checkin id not used to another aw before
-      })
-      // Has to have venue
-      .filter((checkin) => {
-        return checkin.vid;
+        return (moment(checkin.time, timeFormat).isAfter(earliest_allowed_checkin) // Not too long time ago
+          && (!usedCids.includes(checkin.cid)) // checkin id not used to another aw before
+          && (checkin.vid)); // has to have venue
       })
       // Group by venue
       .groupBy((checkin) => {
@@ -143,6 +138,7 @@ function buildPayload(afterwork) {
       }
       persons = persons.slice(0, -1);
       // build payload
+      log("venue for channel:", venue[0]);
       var payload = {
         'text': venue.length + ' henkilöä afterworkilla ravintolassa ' + venue[0].vname + ' (' + persons + ')',
         'channel': channels[venue[0].city],
@@ -155,13 +151,13 @@ function buildPayload(afterwork) {
 
 // Helper for interval
 var timer = function() {
-  // getMockFeed()
-  getUntappdFeed()
+  getMockFeed()
+  // getUntappdFeed()
     .then(parseAfterworkers)
     .then(buildPayload)
     .then((resolve, reject) => {
-      slack.api("chat.postMessage", payload, function (err, response) {
-        log("slac response", response);
+      slack.api("chat.postMessage", resolve, function (err, response) {
+        log("slack response: ", response);
       })
       log("resolve: ", resolve);
     })
@@ -179,12 +175,6 @@ var followSlack = function () {
     });
   });
 }
-
-// Accual calls for start different parts of application
-// followSlack();
-// timer();
-setInterval(timer, loopingTime * 1000);
-
 
 // Send welcome message to all channels at slack
 var sendWelcomeMessage = function() {
@@ -243,3 +233,10 @@ function log(...args) {
     console.log(arg);
   })
 }
+
+
+// Accual calls for start different parts of application
+// followSlack();
+timer();
+setInterval(timer, loopingTime * 500);
+
