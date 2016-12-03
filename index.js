@@ -67,7 +67,7 @@ function getMockFeed() {
 
 function parseAfterworkers(feed) {
   return new Promise((resolve, reject) => {
-    var earliest_allowed_checkin = moment().subtract(whatIsCountedAsAfterWork).subtract({months: 2}); // subtract more for debugging
+    var earliest_allowed_checkin = moment().subtract(whatIsCountedAsAfterWork) // subtract more time for debugging
     log("feed: ", feed, "end of feed");
     afterwork = _.chain(feed)
       .filter((checkin) => {
@@ -161,7 +161,7 @@ var followSlack = function () {
 
 // Send welcome message to all channels at slack
 var sendWelcomeMessage = function() {
-  Object.keys(channels).forEach(function(city) {
+/*  Object.keys(channels).forEach(function(city) {
     slack.api('chat.postMessage', {
       text: 'Hei jos haluat minun kaveriksi lähetä kanavalle viesti: ```@seppokaljalla {untapdd-username}```',
       channel: channels[city],
@@ -169,29 +169,26 @@ var sendWelcomeMessage = function() {
     }, function (err, res) {
       log("res: ", res);
     });
-  });
+  });*/
 }
 
 // WebSocker lisner
 var listenWebSocket = function (url, user_id) {
-  log(url, user_id);
-
+  log("url: ", url);
+  log("user_id: ", user_id);
   var ws = new WebSocket(url);
 
   ws.on('message', function(message) {
     log(message);
-
     message = JSON.parse(message);
-    
     if (message.type === 'message' && message.subtype !== 'bot_message') {
-      
-      if (message.text.indexOf(user_id)) {
+      if (message.text.indexOf(user_id) === 2 && message.text.split(' ').length === 2) { // index 2 is message begin and username for request
+        log("create friend request for ", message.text.split(' ')[1]);
         createFriendRequest(message.text.split(' ')[1]);
       }
     }
   });
 }
-
 
 // Create friend request from untappd
 var createFriendRequest = function (user) {
@@ -211,7 +208,7 @@ function startBot() {
 };
 
 function log(...args) {
-  // could add some real logging to file etc.
+  // could add here some real logging to file etc.
   args.map((arg) => {
     console.log(arg);
   })
@@ -219,14 +216,14 @@ function log(...args) {
 
 // Helper for interval
 var timer = function() {
-  getMockFeed()
-  // getUntappdFeed()
+  // getMockFeed()
+  getUntappdFeed()
     .then(parseAfterworkers)
     .then(buildPayload)
     .then((resolve, reject) => {
-      slack.api("chat.postMessage", resolve, function (err, response) {
+/*      slack.api("chat.postMessage", resolve, function (err, response) {
         log("slack response: ", response);
-      })
+      })*/
       log("resolve: ", resolve);
     })
     .catch((reason) => {
@@ -237,5 +234,5 @@ var timer = function() {
 // Accual calls for start different parts of application
 // followSlack();
 timer();
-setInterval(timer, loopingTime * 500);
-
+setInterval(timer, loopingTime * 1000 * 60);
+followSlack();
