@@ -13,7 +13,7 @@ var accessToken = [ config.accessToken ];
 var loopingTime = config.loopingTime; 
 var whatIsCountedAsAfterWork = config.whatIsCountedAsAfterWork;
 var lookupuser = config.lookupuser;
-var slackWebhookURL = config.slackWebhookURL;
+var slackApiToken = config.slackApiToken;
 var channels = config.channels;
 var botname = config.botname;
 
@@ -32,7 +32,6 @@ untappd.setClientSecret(clientSecret);
 untappd.setAccessToken(accessToken); // TODO add accessToken adding LATER get accessToken
 // Create Slack Client
 var slack = new Slack(config.slackApiToken);
-slack.setWebhook(slackWebhookURL); // set url
 
 var getAfterworkFeed = function(cb) {
   untappd.activityFeed(function (err, obj) {
@@ -105,7 +104,7 @@ var parseAfterWorkAndSendToSlack = function(afterwork) {
       'channel': channels[venue[0].city],
       'username': botname
     }
-    slack.webhook(payload, function(err, response) {
+    slack.api("chat.postMessage", payload, function(err, response) {
       if (debug) console.log(response);
     })
   }
@@ -120,7 +119,8 @@ timer();
 //setInterval(timer, loopingTime);
 
 slack.api("rtm.start", function(err, response) {
-  openWebsocket(response.url);
+  //var uId = getUserId();
+  //openWebsocket(response.url);
 });
 
 function openWebsocket(url) {
