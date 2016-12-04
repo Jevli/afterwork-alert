@@ -13,6 +13,7 @@ var clientSecret = [ config.clientSecret ];
 var accessToken = [ config.accessToken ];
 var loopingTime = config.loopingTime; 
 var whatIsCountedAsAfterWork = config.whatIsCountedAsAfterWork;
+var whatIsCountedAfterPrevious = config.whatIsCountedAfterPrevious;
 var lookupuser = config.lookupuser;
 var slackApiToken = config.slackApiToken;
 var channels = config.channels;
@@ -67,7 +68,7 @@ function getMockFeed() {
 
 function parseAfterworkers(feed) {
   return new Promise((resolve, reject) => {
-    var earliest_allowed_checkin = moment().subtract(whatIsCountedAsAfterWork) // subtract more time for debugging
+    var earliest_allowed_checkin = moment().subtract(whatIsCountedAsAfterWork).subtract(whatIsCountedAsAfterWork); // subtract more time for debugging
     log("feed: ", feed, "end of feed");
     afterwork = _.chain(feed)
       .filter((checkin) => {
@@ -117,8 +118,10 @@ function parseAfterworkers(feed) {
 // a: list of current checkins which are having AW
 // b: checkin to be tested against a
 function isCountedInAW(a, b) {
-  var min = moment(a[0].time, timeFormat);
-  var max = moment(min).add(whatIsCountedAsAfterWork);
+  var min = moment(a[0].time, timeFormat); // First one's checkin time
+  var max = a.length < 2
+    ? moment(min).add(whatIsCountedAsAfterWork) // First one + maxTime
+    : moment(a[a.length - 1].time, timeFormat).add(whatIsCountedAfterPrevious); // Previous added + maxTimeAfterPrevious
   var current = moment(b.time, timeFormat);
   if (current.isBetween(min, max)
    && (a.find((checkin) => { return checkin.uid === b.uid }) === undefined)) {
@@ -127,9 +130,10 @@ function isCountedInAW(a, b) {
   return false;
 }
 
-function buildPayload(afterwork) {
+function buildPayloads(afterwork) {
   return new Promise((resolve, reject) => {
     // for every venue, send message
+    var payloads = [];
     for (let venue of afterwork) {
       // build persons string
       var persons = "";
@@ -138,14 +142,14 @@ function buildPayload(afterwork) {
       }
       persons = persons.slice(0, -1);
       // build payload
-      log("venue for channel:", venue[0]);
       var payload = {
         'text': venue.length + ' henkilöä afterworkilla ravintolassa ' + venue[0].vname + ' (' + persons + ')',
         'channel': channels[venue[0].city],
         'username': botname
       }
-      resolve(payload);
+      payloads.push(payload);
     }
+    resolve(payloads);
   });
 }
 
@@ -161,7 +165,7 @@ var followSlack = function () {
 
 // Send welcome message to all channels at slack
 var sendWelcomeMessage = function() {
-/*  Object.keys(channels).forEach(function(city) {
+  Object.keys(channels).forEach(function(city) {
     slack.api('chat.postMessage', {
       text: 'Hei jos haluat minun kaveriksi lähetä kanavalle viesti: ```@seppokaljalla {untapdd-username}```',
       channel: channels[city],
@@ -169,7 +173,7 @@ var sendWelcomeMessage = function() {
     }, function (err, res) {
       log("res: ", res);
     });
-  });*/
+  });
 }
 
 // WebSocker lisner
@@ -219,12 +223,14 @@ var timer = function() {
   // getMockFeed()
   getUntappdFeed()
     .then(parseAfterworkers)
-    .then(buildPayload)
+    .then(buildPayloads)
     .then((resolve, reject) => {
-/*      slack.api("chat.postMessage", resolve, function (err, response) {
-        log("slack response: ", response);
-      })*/
-      log("resolve: ", resolve);
+      resolve.map((payload) => {
+        slack.api("chat.postMessage", payload, function (err, response) {
+          log("slack response: ", response);
+        })
+        log("resolve: ", payload);
+      });
     })
     .catch((reason) => {
       log("reason: ", reason);
@@ -232,7 +238,6 @@ var timer = function() {
 }
 
 // Accual calls for start different parts of application
-// followSlack();
-timer();
+// timer();
 setInterval(timer, loopingTime * 1000 * 60);
 followSlack();
