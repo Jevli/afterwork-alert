@@ -67,18 +67,20 @@ function getMockFeed() {
 }
 
 function parseAfterworkers(feed) {
+  log("feed: ", feed, "end of feed");
   return new Promise((resolve, reject) => {
     // subtract twice to get afterworks between loops
-    var earliest_allowed_checkin = moment()
+    var earliest_allowed_checkin = moment().utc()
       .subtract(whatIsCountedAsAfterWork)
       .subtract(whatIsCountedAsAfterWork);
-    log("feed: ", feed, "end of feed");
+    log("earliest: " + earliest_allowed_checkin.toString());
     afterwork = _.chain(feed)
       .sortBy((checkin) => {
         return moment(checkin.time, timeFormat);
       })
       .filter((checkin) => {
-        return moment().utc(checkin.time, timeFormat).isAfter(earliest_allowed_checkin) // Not too long time ago
+      log(checkin.name + ": " + moment(checkin.time, timeFormat).utc().toString());
+        return moment(checkin.time, timeFormat).utc().isAfter(earliest_allowed_checkin) // Not too long time ago
           && (!usedCids.includes(checkin.cid)) // checkin id not used to another aw before
           && (checkin.vid); // has to have venue
       })
