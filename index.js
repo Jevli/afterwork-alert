@@ -18,7 +18,7 @@ var lookupuser = config.lookupuser;
 var slackApiToken = config.slackApiToken;
 var channels = config.channels;
 var botname = config.botname;
-var timeFormat = 'ddd, D MMM YYYY HH:mm:ss +0000';
+var timeFormat = 'ddd, DD MMM YYYY HH:mm:ss +0000';
 var usedCids = [];
 
 // Set to true if you want to see all sort of nasty output on stdout.
@@ -68,13 +68,19 @@ function getMockFeed() {
 
 function parseAfterworkers(feed) {
   return new Promise((resolve, reject) => {
-    var earliest_allowed_checkin = moment().subtract(whatIsCountedAsAfterWork).subtract(whatIsCountedAsAfterWork); // subtract more time for debugging
+    // subtract twice to get afterworks between loops
+    var earliest_allowed_checkin = moment()
+      .subtract(whatIsCountedAsAfterWork)
+      .subtract(whatIsCountedAsAfterWork);
     log("feed: ", feed, "end of feed");
     afterwork = _.chain(feed)
+      .sortBy((checkin) => {
+        return moment(checkin.time, timeFormat);
+      })
       .filter((checkin) => {
-        return (moment(checkin.time, timeFormat).isAfter(earliest_allowed_checkin) // Not too long time ago
+        return moment().utc(checkin.time, timeFormat).isAfter(earliest_allowed_checkin) // Not too long time ago
           && (!usedCids.includes(checkin.cid)) // checkin id not used to another aw before
-          && (checkin.vid)); // has to have venue
+          && (checkin.vid); // has to have venue
       })
       // Group by venue
       .groupBy((checkin) => {
