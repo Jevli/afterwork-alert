@@ -193,7 +193,7 @@ var listenWebSocket = function (url, user_id) {
   ws.on('message', function(message) {
     log(message);
     message = JSON.parse(message);
-    if (message.type === 'message' && message.subtype !== 'bot_message') {
+    if (message.type === 'message' && message.subtype !== 'bot_message' && message.text !== undefined) {
       if (message.text.indexOf(user_id) === 2 && message.text.split(' ').length === 2) { // index 2 is message begin and username for request
         log("create friend request for ", message.text.split(' ')[1]);
         createFriendRequest(message.text.split(' ')[1]);
