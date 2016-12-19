@@ -175,7 +175,7 @@ var followSlack = function () {
 var sendWelcomeMessage = function() {
   Object.keys(channels).forEach(function(city) {
     slack.api('chat.postMessage', {
-      text: 'Hei jos haluat minun kaveriksi lähetä kanavalle viesti: ```@seppokaljalla {untapdd-username}```',
+      text: 'Hei jos haluat minun kaverikseni lähetä kanavalle viesti: ```@seppokaljalla {untapdd-username}```',
       channel: channels[city],
       username: botname
     }, function (err, res) {
