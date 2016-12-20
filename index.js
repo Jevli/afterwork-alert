@@ -38,6 +38,9 @@ var slack = new Slack(config.slackApiToken);
 function getUntappdFeed() {
   return new Promise((resolve, reject) => {
     untappd.activityFeed(function (err, obj) {
+      if (err) {
+        reject(err);
+      }
       log(obj, err);
       var afterwork = [];
       // Check what counts is really | either this or items.size etc
