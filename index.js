@@ -54,8 +54,8 @@ function getUntappdFeed() {
             'name': item.user.first_name + ' ' + item.user.last_name
           });
         }
-        return resolve(afterwork);
       }
+      return resolve(afterwork);
     })
   });
 }
