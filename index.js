@@ -41,7 +41,7 @@ function getUntappdFeed() {
       log(obj, err);
       var afterwork = [];
       // Check what counts is really | either this or items.size etc
-      if (obj && obj.response && obj.response.checkins.count > 0) {
+      if (obj && obj.response && obj.response.checkins && obj.response.checkins.count > 0) {
         var items = obj.response.checkins.items;
         for (var item of items) {
           afterwork.push({
