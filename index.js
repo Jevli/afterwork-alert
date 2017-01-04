@@ -87,7 +87,7 @@ function parseAfterworkers(feed) {
         return moment(checkin.time, timeFormat);
       })
       .filter((checkin) => {
-      log("PARSER " + checkin.fname + checkin.lname[0].toUpperCase() + " (" + checkin.venue + "): " + moment(checkin.time, timeFormat).utc().toString());
+      log("PARSER " + checkin.fname + checkin.lname.charAt(0).toUpperCase() + " (" + checkin.venue + "): " + moment(checkin.time, timeFormat).utc().toString());
         return moment(checkin.time, timeFormat).utc().isAfter(earliest_allowed_checkin) // Not too long time ago
           && (!usedCids.includes(checkin.cid)) // checkin id not used to another aw before
           && (checkin.vid); // has to have venue
@@ -154,7 +154,7 @@ function buildPayloads(afterwork) {
       // build persons string
       var persons = "";
       for (let checkin of venue) {
-        persons += checkin.fname + checkin.lname[0].toUpperCase() + ', ';
+        persons += checkin.fname + checkin.lname.charAt(0).toUpperCase() + ', ';
       }
       persons = persons.slice(0, -2);
       // build payload
