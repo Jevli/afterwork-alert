@@ -1,11 +1,11 @@
 var UntappdClient = require("node-untappd");
 var Slack = require('slack-node');
-var _ = require('underscore');
+var _ = require('lodash');
 var moment = require('moment');
 var https = require('https');
 var WebSocket = require('ws');
 var config = require('./config')[process.env.mode];
-var mockData = require('./config').mockData;
+var mockData = require('./config')["mockData"];
 
 // Definitions
 var clientId = [ config.clientId ];
@@ -15,8 +15,10 @@ var loopingTime = config.loopingTime;
 var whatIsCountedAsAfterWork = config.whatIsCountedAsAfterWork;
 var whatIsCountedAfterPrevious = config.whatIsCountedAfterPrevious;
 var lookupuser = config.lookupuser;
+var untappdUserPage = "https://untappd.com/user/";
 var slackApiToken = config.slackApiToken;
 var channels = config.channels;
+var fallbackChannel = config.fallbackChannel;
 var botname = config.botname;
 var timeFormat = 'ddd, DD MMM YYYY HH:mm:ss +0000';
 var usedCids = [];
@@ -54,7 +56,8 @@ function getUntappdFeed() {
             'vname': item.venue !== undefined ? item.venue.venue_name : undefined,
             'city': item.venue !== undefined && item.venue.location !== undefined ? item.venue.location.venue_city : undefined,
             'uid': item.user.uid,
-            'name': item.user.first_name + ' ' + item.user.last_name
+            'fname': item.user.first_name,
+            'lname': item.user.last_name
           });
         }
       }
@@ -65,24 +68,26 @@ function getUntappdFeed() {
 
 function getMockFeed() {
   return new Promise((resolve, reject) => {
-    return resolve(mockData);
+    if (mockData) {
+      return resolve(mockData);
+    }
+    return reject("Error: no mockData provided");
   });
 }
 
 function parseAfterworkers(feed) {
-  log("feed: ", feed, "end of feed");
   return new Promise((resolve, reject) => {
     // subtract twice to get afterworks between loops
     var earliest_allowed_checkin = moment().utc()
       .subtract(whatIsCountedAsAfterWork)
       .subtract(whatIsCountedAsAfterWork);
-    log("earliest: " + earliest_allowed_checkin.toString());
+    log("PARSER earliest: " + earliest_allowed_checkin.toString());
     afterwork = _.chain(feed)
       .sortBy((checkin) => {
         return moment(checkin.time, timeFormat);
       })
       .filter((checkin) => {
-      log(checkin.name + ": " + moment(checkin.time, timeFormat).utc().toString());
+      log("PARSER " + checkin.fname + checkin.lname[0].toUpperCase() + " (" + checkin.venue + "): " + moment(checkin.time, timeFormat).utc().toString());
         return moment(checkin.time, timeFormat).utc().isAfter(earliest_allowed_checkin) // Not too long time ago
           && (!usedCids.includes(checkin.cid)) // checkin id not used to another aw before
           && (checkin.vid); // has to have venue
@@ -115,7 +120,7 @@ function parseAfterworkers(feed) {
         return elem.length > 1;
       })
       .value();
-    log("parsed afterworkers: ", afterwork, "end of parsed afterworkers");
+    log("PARSER afterworkers: ", afterwork, "end of parsed afterworkers");
     // Add afterwork content to used cids
     afterwork.map((checkinGroups) => {
       checkinGroups.map((checkin) => {
@@ -149,23 +154,36 @@ function buildPayloads(afterwork) {
       // build persons string
       var persons = "";
       for (let checkin of venue) {
-        persons += checkin.name + ' ';
+        persons += checkin.fname + checkin.lname[0].toUpperCase() + ', ';
       }
-      persons = persons.slice(0, -1);
+      persons = persons.slice(0, -2);
       // build payload
+      var channel = channels[venue[0].city] || fallbackChannel;
       var payload = {
-        'text': venue.length + ' henkilöä afterworkilla ravintolassa ' + venue[0].vname + ' (' + persons + ')',
-        'channel': channels[venue[0].city],
+        'text': venue.length + ' henkilöä afterworkilla sijainnissa ' + venue[0].vname + ' (' + persons + ')',
+        'channel': channel,
         'username': botname
       }
-      payloads.push(payload);
+      if (channel && botname) {
+        payloads.push(payload);
+      }
     }
     resolve(payloads);
   });
 }
 
+function sendToSlack(channel, message) {
+  slack.api('chat.postMessage', {
+    text: message,
+    channel: channel,
+    username: botname
+  }, function(err, res) {
+    log(err, res);
+  });
+}
+
 // Helper for starting to follow slack
-var followSlack = function () {
+function followSlack() {
   slack.api('rtm.start', function(err, response) {
     sendWelcomeMessage();
     slack.api('auth.test', function(err, res) {
@@ -175,52 +193,74 @@ var followSlack = function () {
 }
 
 // Send welcome message to all channels at slack
-var sendWelcomeMessage = function() {
+function sendWelcomeMessage() {
   Object.keys(channels).forEach(function(city) {
-    slack.api('chat.postMessage', {
-      text: 'Hei jos haluat minun kaverikseni lähetä kanavalle viesti: ```@seppokaljalla {untappd-username}```',
-      channel: channels[city],
-      username: botname
-    }, function (err, res) {
-      log("res: ", res);
-    });
+    sendToSlack(channels[city], 'Hei jos haluat minun kaverikseni lähetä kanavalle viesti: ```@' + botname + ' {untappd-username}```');
   });
 }
 
-// WebSocker lisner
-var listenWebSocket = function (url, user_id) {
-  log("url: ", url);
-  log("user_id: ", user_id);
+// WebSocket listening for commands
+function listenWebSocket(url, user_id) {
+  log("WEBSOCKET url: " + url);
+  log("WEBSOCKET user_id to watch: " + user_id);
   var ws = new WebSocket(url);
 
   ws.on('message', function(message) {
-    log(message);
+    log('SLACK message: ' + message);
     message = JSON.parse(message);
     if (message.type === 'message' && message.subtype !== 'bot_message' && message.text !== undefined) {
       if (message.text.indexOf(user_id) === 2 && message.text.split(' ').length === 2) { // index 2 is message begin and username for request
-        log("create friend request for ", message.text.split(' ')[1]);
-        createFriendRequest(message.text.split(' ')[1]);
+        var user = message.text.split(' ')[1];
+        var channel = message.channel;
+        createFriendRequest(channel, user);
       }
     }
   });
 }
 
-// Create friend request from untappd
-var createFriendRequest = function (user) {
-  untappd.userInfo(function(err, obj){
-    log(obj.response.user);
-          
-    untappd.requestFriends(function (err, obj) {
-      log(obj);
-    }, {'TARGET_ID': obj.response.user.uid });
-
-  }, {"USERNAME" : user});
+// accept pending request
+function acceptPending(channel, username, user_uid) {
+  untappd.acceptFriends(function(err, obj) {
+    if (!err) {
+      sendToSlack(channel, username + ": Hyväksyin sun kaveripyynnön!");
+    }
+  }, {'TARGET_ID': user_uid});
 }
 
-// Custom Slack Bot Stuff
-function startBot() {
-  log("Bot not yet done");
-};
+// Create friend request from untappd
+function createFriendRequest(channel, user) {
+  log("FRIEND REQUEST create friend request for " + user);
+  untappd.userInfo(function(err, obj){
+    if (obj && obj.meta && obj.meta.code === 500) {
+      if (obj.meta.error_detail === 'There is no user with that username.') {
+        sendToSlack(channel, 'Ei löytynyt käyttäjää ' + user);
+      }
+      log("FRIEND REQUEST ERROR");
+    } else {
+      log("USERINFO OBJ", obj);
+      log("USERINFO ERR", err);
+      var user_uid = obj.response.user.uid;
+      untappd.requestFriends(function (err, obj) {
+        log("OBJ", obj);
+        log("ERR", err);
+        if (obj && obj.meta && obj.meta.code === 500) {
+          if (obj.meta.error_detail === 'This request is pending your approval.') {
+            acceptPending(channel, user, user_uid);
+          }
+          if (obj.meta.error_detail === "This request is pending the user\'s approval.") {
+            sendToSlack(channel, user + ": Sulla on jo kaveripyyntö odottamassa. Käy hyväksymässä osoitteessa " + untappdUserPage + lookupuser);
+          }
+          if (obj.meta.error_detail === 'You are already friends with this user.') {
+            sendToSlack(channel, user + ": Ollaan jo kavereita!");
+          }
+        }
+        else if (obj && obj.meta && obj.meta.code === 200) {
+          sendToSlack(channel, user + ": Tein sulle kaveripyynnön! Käy hyväksymässä osoitteessa " + untappdUserPage + lookupuser);
+        }
+      }, {'TARGET_ID': obj.response.user.uid});
+    }
+  }, {"USERNAME" : user});
+}
 
 function log(...args) {
   // could add here some real logging to file etc.
@@ -230,7 +270,7 @@ function log(...args) {
 }
 
 // Helper for interval
-var timer = function() {
+function timer() {
   // getMockFeed()
   getUntappdFeed()
     .then(parseAfterworkers)
@@ -238,13 +278,13 @@ var timer = function() {
     .then((resolve, reject) => {
       resolve.map((payload) => {
         slack.api("chat.postMessage", payload, function (err, response) {
-          log("slack response: ", response);
+          log("SLACK response: ", response);
         })
-        log("resolve: ", payload);
+        log("SLACK resolve: ", payload);
       });
     })
     .catch((reason) => {
-      log("reason: ", reason);
+      log("ERROR reason: ", reason);
     });
 }
 

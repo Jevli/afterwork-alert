@@ -12,6 +12,7 @@
       "Venue_City2": "#channel2",
       "Venue_City3": "#channel3"
     },
+    "fallbackChannel": "#fallbackChannel",
     "botname": "SlackBotName"
   },
   "dev": {
