@@ -195,8 +195,9 @@ function followSlack() {
 // Send welcome message to all channels at slack
 function sendWelcomeMessage() {
   Object.keys(channels).forEach(function(city) {
-    sendToSlack(channels[city], 'Hei jos haluat minun kaverikseni lähetä kanavalle viesti: ```@' + botname + ' {untappd-username}```');
+    sendToSlack(channels[city], 'Hei, mun kaveriksi pääset komennolla: ```@' + botname + ' {untappd-username}```');
   });
+  sendToSlack(fallbackChannel, 'Hei, mun Untappd-kaveriksi pääset komennolla: ```@' + botname + ' {untappd-username}```');
 }
 
 // WebSocket listening for commands
@@ -208,14 +209,26 @@ function listenWebSocket(url, user_id) {
   ws.on('message', function(message) {
     log('SLACK message: ' + message);
     message = JSON.parse(message);
-    if (message.type === 'message' && message.subtype !== 'bot_message' && message.text !== undefined) {
-      if (message.text.indexOf(user_id) === 2 && message.text.split(' ').length === 2) { // index 2 is message begin and username for request
-        var user = message.text.split(' ')[1];
-        var channel = message.channel;
-        createFriendRequest(channel, user);
-      }
+    log('SLACK parsed message:', message);
+    if (isFriendRequest(message, user_id)) {
+      var user = message.text.split(' ')[1];
+      var channel = message.channel;
+      createFriendRequest(channel, user);
     }
   });
+}
+
+function isFriendRequest(message, user_id) {
+  if(message.type === 'message'
+    && message.subtype !== 'bot_message'
+    && message.text !== undefined
+    && message.text.indexOf(user_id) === 2
+    && (message.text.split(' ').length === 2
+      || (message.text.split(' ').length === 3
+        && message.text.split(' ')[2] === ''))) {
+    return true;
+  }
+  return false;
 }
 
 // accept pending request
