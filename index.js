@@ -235,7 +235,7 @@ function isFriendRequest(message, user_id) {
 function acceptPending(channel, username, user_uid) {
   untappd.acceptFriends(function(err, obj) {
     if (!err) {
-      sendToSlack(channel, username + ": Hyväksyin sun kaveripyynnön!");
+      sendToSlack(channel, username + ": Hyväksyin sun kaveripyyntösi!");
     }
   }, {'TARGET_ID': user_uid});
 }
