@@ -185,7 +185,6 @@ function sendToSlack(channel, message) {
 // Helper for starting to follow slack
 function followSlack() {
   slack.api('rtm.start', function(err, response) {
-    sendWelcomeMessage();
     slack.api('auth.test', function(err, res) {
       listenWebSocket(response.url, res.user_id);
     });
@@ -193,29 +192,58 @@ function followSlack() {
 }
 
 // Send welcome message to all channels at slack
-function sendWelcomeMessage() {
+function sendWelcomeMessageToAll(channel) {
   Object.keys(channels).forEach(function(city) {
-    sendToSlack(channels[city], 'Hei, mun kaveriksi pääset komennolla: ```@' + botname + ' {untappd-username}```');
+    sendWelcomeToChannel(channels[city]);
   });
-  sendToSlack(fallbackChannel, 'Hei, mun Untappd-kaveriksi pääset komennolla: ```@' + botname + ' {untappd-username}```');
+  sendWelcomeToChannel(fallbackChannel);
+}
+
+function sendWelcomeToChannel(channel) {
+  sendToSlack(channel, 'Hei, mun kaveriksi pääset komennolla: ```@' + botname + ' {untappd-username}```');
 }
 
 // WebSocket listening for commands
 function listenWebSocket(url, user_id) {
-  log("WEBSOCKET url: " + url);
-  log("WEBSOCKET user_id to watch: " + user_id);
+
   var ws = new WebSocket(url);
+
+  ws.on('open', function(message) {
+    sendWelcomeToChannel(fallbackChannel);
+    log("WEBSOCKET connected");
+    log("WEBSOCKET url: " + url);
+    log("WEBSOCKET user_id to watch: " + user_id);
+  })
 
   ws.on('message', function(message) {
     log('SLACK message: ' + message);
     message = JSON.parse(message);
     log('SLACK parsed message:', message);
+    var user = message.text.split(' ')[1];
+    var channel = message.channel;
     if (isFriendRequest(message, user_id)) {
-      var user = message.text.split(' ')[1];
-      var channel = message.channel;
       createFriendRequest(channel, user);
+    } else if (isHelp(message, user_id)) {
+      sendWelcomeMessage();
     }
   });
+
+  ws.on('close', function(message) {
+    log("WEBSOCKET disconnected");
+  });
+}
+
+function isHelp() {
+  if(message.type === 'message'
+    && message.subtype !== 'bot_message'
+    && message.text !== undefined
+    && message.text.indexOf(user_id) === 2
+    && (message.text.split(' ').length === 1
+    || (message.text.split(' ').length === 2
+    && message.text.split(' ')[1] === ''))) {
+    return true;
+  }
+  return false;
 }
 
 function isFriendRequest(message, user_id) {
@@ -278,7 +306,7 @@ function createFriendRequest(channel, user) {
 function log(...args) {
   // could add here some real logging to file etc.
   args.map((arg) => {
-    console.log(arg);
+    console.log(moment().format("YYYY-MM-DD HH:MM:SS ") + arg);
   })
 }
 
