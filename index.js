@@ -219,11 +219,13 @@ function listenWebSocket(url, user_id) {
     log('SLACK message: ' + message);
     message = JSON.parse(message);
     log('SLACK parsed message:', message);
-    var user = message.text.split(' ')[1];
-    var channel = message.channel;
     if (isFriendRequest(message, user_id)) {
+      var user = message.text.split(' ')[1];
+      var channel = message.channel;
       createFriendRequest(channel, user);
     } else if (isHelp(message, user_id)) {
+      var user = message.text.split(' ')[1];
+      var channel = message.channel;
       sendWelcomeMessage();
     }
   });
