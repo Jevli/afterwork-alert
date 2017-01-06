@@ -216,9 +216,13 @@ function listenWebSocket(url, user_id) {
   })
 
   ws.on('message', function(message) {
+
     log('SLACK message: ' + message);
     message = JSON.parse(message);
-    log('SLACK parsed message:', message);
+    if (message && message.type !== "presence_change") {
+      log('SLACK parsed message:', message);
+    }
+
     if (isFriendRequest(message, user_id)) {
       var user = message.text.split(' ')[1];
       var channel = message.channel;
@@ -312,7 +316,6 @@ function log(...args) {
     if (typeof arg === "string") {
       console.log(moment().format("YYYY-MM-DD HH:MM:SS ") + arg);
     } else {
-      console.log(moment().format("YYYY-MM-DD HH:MM:SS "));
       console.log(arg);
     }
   })
