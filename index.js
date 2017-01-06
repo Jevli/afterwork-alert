@@ -235,7 +235,7 @@ function listenWebSocket(url, user_id) {
   });
 }
 
-function isHelp() {
+function isHelp(message, user_id) {
   if(message.type === 'message'
     && message.subtype !== 'bot_message'
     && message.text !== undefined
