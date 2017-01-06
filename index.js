@@ -208,8 +208,8 @@ function listenWebSocket(url, user_id) {
 
   var ws = new WebSocket(url);
 
+  sendWelcomeToChannel(fallbackChannel);
   ws.on('open', function(message) {
-    sendWelcomeToChannel(fallbackChannel);
     log("WEBSOCKET connected");
     log("WEBSOCKET url: " + url);
     log("WEBSOCKET user_id to watch: " + user_id);
@@ -308,7 +308,12 @@ function createFriendRequest(channel, user) {
 function log(...args) {
   // could add here some real logging to file etc.
   args.map((arg) => {
-    console.log(moment().format("YYYY-MM-DD HH:MM:SS ") + arg);
+    if (typeof arg === "string") {
+      console.log(moment().format("YYYY-MM-DD HH:MM:SS ") + arg);
+    } else {
+      console.log(moment().format("YYYY-MM-DD HH:MM:SS "));
+      console.log(arg);
+    }
   })
 }
 
