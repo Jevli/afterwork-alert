@@ -224,13 +224,14 @@ function listenWebSocket(url, user_id) {
       var channel = message.channel;
       createFriendRequest(channel, user);
     } else if (isHelp(message, user_id)) {
-      var user = message.text.split(' ')[1];
+      // var user = message.text.split(' ')[1];
       var channel = message.channel;
-      sendWelcomeMessage();
+      sendWelcomeToChannel(channel);
     }
   });
 
   ws.on('close', function(message) {
+    sendToSlack(fallbackChannel, "WEBSOCKET closed");
     log("WEBSOCKET disconnected");
   });
 }
