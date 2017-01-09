@@ -87,7 +87,9 @@ function parseAfterworkers(feed) {
         return moment(checkin.time, timeFormat);
       })
       .filter((checkin) => {
-      log("PARSER " + checkin.fname + checkin.lname.charAt(0).toUpperCase() + " (" + checkin.venue + "): " + moment(checkin.time, timeFormat).utc().toString());
+      log("PARSER " + checkin.fname + checkin.lname.charAt(0).toUpperCase() + " (" + checkin.vname + "): "
+        + moment(checkin.time, timeFormat).utc().toString());
+
         return moment(checkin.time, timeFormat).utc().isAfter(earliest_allowed_checkin) // Not too long time ago
           && (!usedCids.includes(checkin.cid)) // checkin id not used to another aw before
           && (checkin.vid); // has to have venue
@@ -234,10 +236,15 @@ function listenWebSocket(url, user_id) {
     }
   });
 
-  ws.on('close', function(message) {
-    sendToSlack(fallbackChannel, "WEBSOCKET closed");
-    log("WEBSOCKET disconnected");
+  ws.on('close', function(code, reason) {
+    sendToSlack(fallbackChannel, "WEBSOCKET closed with code: " + code + ", reason: " + reason);
+    log("WEBSOCKET closed with code: " + code + ", reason: " + reason);
   });
+
+  ws.on('ping', function(data, flags) {
+    log("WEBSOCKET ping -> pong: ", data);
+    ws.pong(data);
+  })
 }
 
 function isHelp(message, user_id) {
