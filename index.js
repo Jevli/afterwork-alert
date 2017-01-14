@@ -35,7 +35,7 @@ untappd.setClientId(clientId);
 untappd.setClientSecret(clientSecret);
 untappd.setAccessToken(accessToken); // TODO add accessToken adding LATER get accessToken
 // Create Slack Client
-var slack = new Slack(config.slackApiToken);
+var slack = new Slack(slackApiToken);
 
 function getUntappdFeed() {
   return new Promise((resolve, reject) => {
@@ -239,10 +239,11 @@ function listenWebSocket(url, user_id) {
   ws.on('close', function(code, reason) {
     sendToSlack(fallbackChannel, "WEBSOCKET closed with code: " + code + ", reason: " + reason);
     log("WEBSOCKET closed with code: " + code + ", reason: " + reason);
+    listenWebSocket(url, user_id);
   });
 
   ws.on('ping', function(data, flags) {
-    log("WEBSOCKET ping -> pong: ", data);
+    log("WEBSOCKET ping -> pong: ");
     ws.pong(data);
   })
 }
