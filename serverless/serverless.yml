@@ -3,61 +3,65 @@ service: afterwork-serverless
 provider:
   name: aws
   runtime: nodejs4.3
-
-# you can overwrite defaults here
-#  stage: dev 
-#  region: eu-west-1
-
-# you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-
-# you can define service wide environment variables here
-#  environment:
-#    variable1: value1
-
-# you can add packaging information here
-#package:
-#  include:
-#    - include-me.js
-#    - include-me-dir/**
-#  exclude:
-#    - exclude-me.js
-#    - exclude-me-dir/**
+  stage: dev 
+  region: eu-west-1
+  apiKeys:
+    - afterwork-alert-key
+    - ${opt:stage}-afterwork-key
+    - ${evnt:APIKEY}
 
 functions:
-  hello:
-    handler: handler.hello
-
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
-#    events:
-#      - http:
-#          path: users/create
-#          method: get
-#      - s3: ${env:BUCKET}
-#      - schedule: rate(10 minutes)
-#      - sns: greeter-topic
-#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
-#      - alexaSkill
-#      - iot:
-#          sql: "SELECT * FROM 'some_topic'"
-
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
+   afterworkLogin:
+    handler: src/handlers/handler.afterworkLogin
+    events:
+      - http:
+        path: login
+        method: get
+        cors: true
+        request:
+          template:
+            application/json: >
+            '{
+              "uname": "$input.params(''uname'')",
+              "pwd": "$input.params(''pwd'')"
+            }'
+    environment:
+      APIKEY: APIKEYHERETOO
+  saveChecking:
+    handler: src/handlers/handler.saveChecking
+    events:
+      - http:
+        path: saveChecking
+        method: post
+        cors: true
+        private: true
+        request:
+          template:
+            application/json: >
+            '{
+              "uname" : "$input.params(''uname'')",
+              "vid" : "$input.params(''vid'')",
+              "vname" : "$input.params(''vname'')",
+              "city" : "$input.params(''city'')"
+            }'
+  searchVenues:
+    handler: src/handlers/handler.searchVenues
+    events:
+      - http:
+        path: venues
+        method: get
+        cors: true
+        private: true
+        request:
+          template:
+            application/json: >
+            '{
+              "ll" : "$input.params(''ll'')"
+            }'
+    environment:
+      CLIENT_ID: FOURSQUORECLIENDIT
+      CLIENT_SECRET: FOURSQUORECLIENDSECRET
+      RADIUS: 50
 
 # you can add CloudFormation resource templates here
 #resources:
