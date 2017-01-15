@@ -11,7 +11,7 @@ provider:
     - ${env:APIKEY}
 
 functions:
-   afterworkLogin:
+  afterworkLogin:
     handler: src/handlers/handler.afterworkLogin
     events:
       - http:
@@ -59,9 +59,9 @@ functions:
               "ll" : "$input.params(''ll'')"
             }'
     environment:
-      CLIENT_ID: FOURSQUORECLIENDIT
-      CLIENT_SECRET: FOURSQUORECLIENDSECRET
-      RADIUS: 50
+      CLIENT_ID: ${env:FOURSQUORECLIENDIT}
+      CLIENT_SECRET: ${env:FOURSQUORECLIENDSECRET}
+      RADIUS: ${env:RADIUS}
 
 # you can add CloudFormation resource templates here
 #resources:
