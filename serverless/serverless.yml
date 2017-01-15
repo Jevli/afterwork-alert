@@ -8,7 +8,7 @@ provider:
   apiKeys:
     - afterwork-alert-key
     - ${opt:stage}-afterwork-key
-    - ${evnt:APIKEY}
+    - ${env:APIKEY}
 
 functions:
    afterworkLogin:
@@ -26,7 +26,7 @@ functions:
               "pwd": "$input.params(''pwd'')"
             }'
     environment:
-      APIKEY: APIKEYHERETOO
+      APIKEY: ${opt:apiKeys}
   saveChecking:
     handler: src/handlers/handler.saveChecking
     events:
