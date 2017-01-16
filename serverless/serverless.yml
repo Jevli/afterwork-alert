@@ -6,9 +6,7 @@ provider:
   stage: dev 
   region: eu-west-1
   apiKeys:
-    - afterwork-alert-key
     - ${opt:stage}-afterwork-key
-    - ${env:APIKEY}
 
 functions:
   afterworkLogin:
@@ -25,8 +23,6 @@ functions:
               "uname": "$input.params(''uname'')",
               "pwd": "$input.params(''pwd'')"
             }'
-    environment:
-      APIKEY: ${opt:apiKeys}
   saveChecking:
     handler: src/handlers/handler.saveChecking
     events:
