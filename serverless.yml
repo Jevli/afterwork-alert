@@ -1,0 +1,88 @@
+service: afterwork-serverless
+
+provider:
+  name: aws
+  runtime: nodejs4.3
+  stage: dev 
+  region: eu-west-1
+  profile: goforecrew
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:Scan
+        - dynamodb:GetItem
+      Resource: "arn:aws:dynamodb:eu-west-1:*:*"
+
+functions:
+  afterworkLogin:
+    handler: src/handler.login
+    events:
+      - http:
+        path: login
+        method: get
+        cors: true
+        request:
+          template:
+            application/json: { "body": "$input.json(''$)" }
+    memorySize: 128
+  #saveChecking:
+  #  handler: src/handlers/handler.saveChecking
+  #  events:
+  #    - http:
+  #      path: saveChecking
+  #      method: post
+  #      cors: true
+  #      private: true
+  #      request:
+  #        template:
+  #          application/json: { "body": "$input.json(''$)" }
+  #searchVenues:
+  #  handler: src/handlers/handler.searchVenues
+  #  events:
+  #    - http:
+  #      path: venues
+  #      method: get
+  #      cors: true
+  #      private: true
+  #      request:
+  #        template:
+  #          application/json: >
+  #          '{
+  #            "ll" : "$input.params(''ll'')"
+  #          }'
+  #  environment:
+  #    CLIENT_ID: ${env:FOURSQUORECLIENDIT}
+  #    CLIENT_SECRET: ${env:FOURSQUORECLIENDSECRET}
+  #    RADIUS: ${env:RADIUS}
+
+resources:
+  Resources:
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: users
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+          - KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    checkingsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: checkings
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+          - KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
