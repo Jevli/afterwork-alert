@@ -21,38 +21,38 @@ functions:
     handler: src/handler.login
     events:
       - http:
-        path: login
-        method: get
-        cors: true
-        request:
-          template:
-            application/json: { "body": "$input.json(''$)" }
+          path: login
+          method: GET
+          cors: true
+          request:
+            template:
+              application/json: { "body": "$input.json(''$)" }
     memorySize: 128
   #saveChecking:
   #  handler: src/handlers/handler.saveChecking
   #  events:
   #    - http:
   #      path: saveChecking
-  #      method: post
-  #      cors: true
-  #      private: true
-  #      request:
-  #        template:
-  #          application/json: { "body": "$input.json(''$)" }
+    #      method: post
+    #      cors: true
+    #      private: true
+    #      request:
+    #        template:
+    #          application/json: { "body": "$input.json(''$)" }
   #searchVenues:
   #  handler: src/handlers/handler.searchVenues
   #  events:
   #    - http:
-  #      path: venues
-  #      method: get
-  #      cors: true
-  #      private: true
-  #      request:
-  #        template:
-  #          application/json: >
-  #          '{
-  #            "ll" : "$input.params(''ll'')"
-  #          }'
+    #      path: venues
+    #      method: get
+    #      cors: true
+    #      private: true
+    #      request:
+    #        template:
+    #          application/json: >
+    #          '{
+    #            "ll" : "$input.params(''ll'')"
+    #          }'
   #  environment:
   #    CLIENT_ID: ${env:FOURSQUORECLIENDIT}
   #    CLIENT_SECRET: ${env:FOURSQUORECLIENDSECRET}
@@ -63,26 +63,26 @@ resources:
     usersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: users
+        TableName: afterworkUsers
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
         KeySchema:
           - AttributeName: id
-          - KeyType: HASH
+            KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
     checkingsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: checkings
+        TableName: afterworkCheckings
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
         KeySchema:
           - AttributeName: id
-          - KeyType: HASH
+            KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1

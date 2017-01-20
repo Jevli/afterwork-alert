@@ -13,8 +13,12 @@ exports.handler.login = (event, context, callback) => {
     if (loginInfo.uname && loginInfo.pwd) {
         var parameters;
         // TODO query parameters
-        dynamodb.query({
-            "TableName": table
+        dynamodb.get({
+            "TableName": table,
+            "Key": {
+                "uname": uname,
+                "pwd": pwd
+            }
         }, function (err, data) {
             if (err) {
                 response['statusCode'] = 404;
