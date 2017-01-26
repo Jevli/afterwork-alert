@@ -1,5 +1,4 @@
 service: afterwork-serverless
-
 provider:
   name: aws
   runtime: nodejs4.3
@@ -16,20 +15,34 @@ provider:
         - dynamodb:GetItem
       Resource: "arn:aws:dynamodb:eu-west-1:*:*"
 
+custom: ${file(config.yml)}
+
 functions:
   afterworkLogin:
-    handler: src/handler.login
+    handler: serverless/src/user.login
     events:
       - http:
           path: login
-          method: GET
+          method: post
           cors: true
           request:
             template:
-              application/json: { "body": "$input.json(''$)" }
+              application/json: { "body": "$input.json(''$'')" }
     memorySize: 128
+  afterworkRegister:
+    handler: serverless/src/user.register
+    events:
+      - http:
+          path: reqister
+          method: post
+          cors: true
+    environment:
+      SLACK_REGISTER_TOKEN: ${self:custom.slack_register_token}
+    memorySize: 128
+
+
   #saveChecking:
-  #  handler: src/handlers/handler.saveChecking
+  #  handler: serverless/src/handler.saveChecking
   #  events:
   #    - http:
   #      path: saveChecking
@@ -40,7 +53,7 @@ functions:
     #        template:
     #          application/json: { "body": "$input.json(''$)" }
   #searchVenues:
-  #  handler: src/handlers/handler.searchVenues
+  #  handler: serverless/src/handler.searchVenues
   #  events:
   #    - http:
     #      path: venues
@@ -65,10 +78,10 @@ resources:
       Properties:
         TableName: afterworkUsers
         AttributeDefinitions:
-          - AttributeName: id
+          - AttributeName: slack_id
             AttributeType: S
         KeySchema:
-          - AttributeName: id
+          - AttributeName: slack_id
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
