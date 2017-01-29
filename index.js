@@ -41,6 +41,7 @@ function getUntappdFeed() {
   return new Promise((resolve, reject) => {
     untappd.activityFeed(function (err, obj) {
       if (err) {
+        log("FEED failed");
         reject(err);
       }
       log(obj, err);
@@ -80,6 +81,7 @@ function parseAfterworkers(feed) {
     // subtract twice to get afterworks between loops
     var earliest_allowed_checkin = moment().utc()
       .subtract(whatIsCountedAsAfterWork)
+      .subtract({months: 2})
       .subtract(whatIsCountedAsAfterWork);
     log("PARSER earliest: " + earliest_allowed_checkin.toString());
     afterwork = _.chain(feed)
@@ -156,7 +158,8 @@ function buildPayloads(afterwork) {
       // build persons string
       var persons = "";
       for (let checkin of venue) {
-        persons += checkin.fname + checkin.lname.charAt(0).toUpperCase() + ', ';
+        // filter unwanted characters out
+        persons += (checkin.fname + checkin.lname.charAt(0).toUpperCase()).replace(/[^\w\säö]/gi, '') + ', ';
       }
       persons = persons.slice(0, -2);
       // build payload
@@ -331,8 +334,8 @@ function log(...args) {
 
 // Helper for interval
 function timer() {
-  // getMockFeed()
-  getUntappdFeed()
+  getMockFeed()
+  // getUntappdFeed()
     .then(parseAfterworkers)
     .then(buildPayloads)
     .then((resolve, reject) => {
@@ -349,6 +352,6 @@ function timer() {
 }
 
 // Accual calls for start different parts of application
-// timer();
-setInterval(timer, loopingTime * 1000 * 60);
-followSlack();
+timer();
+// setInterval(timer, loopingTime * 1000 * 60);
+// followSlack();
