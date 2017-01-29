@@ -334,8 +334,8 @@ function log(...args) {
 
 // Helper for interval
 function timer() {
-  getMockFeed()
-  // getUntappdFeed()
+  // getMockFeed()
+  getUntappdFeed()
     .then(parseAfterworkers)
     .then(buildPayloads)
     .then((resolve, reject) => {
@@ -352,6 +352,6 @@ function timer() {
 }
 
 // Accual calls for start different parts of application
-timer();
-// setInterval(timer, loopingTime * 1000 * 60);
-// followSlack();
+// timer();
+setInterval(timer, loopingTime * 1000 * 60);
+followSlack();
