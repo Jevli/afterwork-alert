@@ -20,6 +20,7 @@ var slackApiToken = config.slackApiToken;
 var channels = config.channels;
 var fallbackChannel = config.fallbackChannel;
 var botname = config.botname;
+var botIconUrl = config.botIconUrl;
 var timeFormat = 'ddd, DD MMM YYYY HH:mm:ss +0000';
 var usedCids = [];
 
@@ -81,7 +82,6 @@ function parseAfterworkers(feed) {
     // subtract twice to get afterworks between loops
     var earliest_allowed_checkin = moment().utc()
       .subtract(whatIsCountedAsAfterWork)
-      .subtract({months: 2})
       .subtract(whatIsCountedAsAfterWork);
     log("PARSER earliest: " + earliest_allowed_checkin.toString());
     afterwork = _.chain(feed)
@@ -167,7 +167,9 @@ function buildPayloads(afterwork) {
       var payload = {
         'text': venue.length + ' henkilöä afterworkilla sijainnissa ' + venue[0].vname + ' (' + persons + ')',
         'channel': channel,
-        'username': botname
+        'username': botname,
+        'as_user': false,
+        'icon_url': botIconUrl
       }
       if (channel && botname) {
         payloads.push(payload);
@@ -181,7 +183,9 @@ function sendToSlack(channel, message) {
   slack.api('chat.postMessage', {
     text: message,
     channel: channel,
-    username: botname
+    username: botname,
+    as_user: false,
+    icon_url: botIconUrl
   }, function(err, res) {
     log(err, res);
   });

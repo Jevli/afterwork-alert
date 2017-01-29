@@ -13,7 +13,8 @@
       "Venue_City3": "#channel3"
     },
     "fallbackChannel": "#fallbackChannel",
-    "botname": "SlackBotName"
+    "botname": "SlackBotName",
+    "botIconUrl": "http://url.com"
   },
   "dev": {
     "clientId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
