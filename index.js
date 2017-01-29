@@ -141,7 +141,7 @@ function isCountedInAW(a, b) {
     ? moment(min).add(whatIsCountedAsAfterWork) // First one + maxTime
     : moment(a[a.length - 1].time, timeFormat).add(whatIsCountedAfterPrevious); // Previous added + maxTimeAfterPrevious
   var current = moment(b.time, timeFormat);
-  if (current.isBetween(min, max)
+  if (current.isBetween(min, max, null, '[]')
    && (a.find((checkin) => { return checkin.uid === b.uid }) === undefined)) {
     return true;
   }
