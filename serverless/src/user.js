@@ -48,35 +48,22 @@ module.exports.register = (event, context, callback) => {
     event.body.token ? data = event.body : data = parse(event.body)
     var uname = data.text.split(' ')[0]
     var slack_id = data.user_id;
-    
+    console.time("Duration");
     if (data.token === process.env.SLACK_REGISTER_TOKEN) {
         dynamodb.scan({
             "TableName": "afterworkUsers"
-        }, function (err, results) {
+        }, (err, results) => {
             if (err) {
                 console.log("err")
             } else {
                 if (canReqister(results.Items, uname, slack_id)) {
-                    //TODO CREATE register logic
+                    registerUser(data, context, callback)
                 } else {
                     createResponse(400, 'No right to user change or create', context, callback)
                 }
             }
         })
     }
-
-    
-    /*if (data.token === process.env.SLACK_REGISTER_TOKEN) {
-        console.log('Token match')
-        if (canRegister(data.text, data.user_id, context, callback)) {
-            console.log("Register new user")
-            //registerUser(data, context, callback);
-        } else {
-            createResponse(404, 'Not your account', context, callback);
-        }
-    } else {
-        createResponse(404, 'Auth token invalid', context, callback);
-    }*/
 }
 
 function canReqister(results, uname, slack_id) {
@@ -107,9 +94,7 @@ function registerUser(data, ctx, cb) {
     dynamodb.put({
         "TableName": "afterworkUsers",
         "Item": item
-    }, function(err, d) {
-        console.log("Add Data: ", data)
-        console.log("Add Err: ", err)
+    }, (err, d) => {
         if (err) {
             createResponse(500, 'Create error in databe', ctx, cb)
         } else {
@@ -124,8 +109,9 @@ function parse(body) {
         var keyValue = object.split('=');
         if (keyValue[0] === 'response_url') {
             data[keyValue[0]] = decodeURIComponent(keyValue[1]);
+        } else {
+            data[keyValue[0]] = keyValue[1];
         }
-        data[keyValue[0]] = keyValue[1];
     });
     console.log("parse ready")
     return data;
@@ -136,16 +122,15 @@ function createResponse(code, msg, context, callback) {
     console.log('MSG ', msg)
 
     var response = {
-        headers: {
-            "Access-Control-Allow-Origin": "*"
-        },
         statusCode: code,
         body: msg
     };
-    if (code > 300) {
+    //{"text": msg, "username": "bot", "markdown": true}
+    console.timeEnd("Duration");
+    if (code >= 300) {
         callback(response, null);
         context.fail();
-    } else if (code > 200) {
+    } else if (code >= 200) {
         callback(null, response);
         context.succeed();
     }

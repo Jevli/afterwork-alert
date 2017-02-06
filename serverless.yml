@@ -36,6 +36,9 @@ functions:
           path: reqister
           method: post
           cors: true
+          response:
+            headers:
+              Content-Type: application/json
     environment:
       SLACK_REGISTER_TOKEN: ${self:custom.slack_register_token}
     memorySize: 128
