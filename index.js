@@ -231,6 +231,10 @@ function listenWebSocket(url, user_id) {
     if (message && message.type !== "presence_change") {
       log('SLACK parsed message:', message);
     }
+    if (message && message.type === "reconnect_url") {
+      url = message.url;
+      log("WEBSOCKET new url: " + url);
+    }
 
     if (isFriendRequest(message, user_id)) {
       var user = message.text.split(' ')[1];
