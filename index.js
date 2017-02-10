@@ -232,6 +232,11 @@ function listenWebSocket(url, user_id) {
       log('SLACK parsed message:', message);
     }
     if (message && message.type === "reconnect_url") {
+      if (!message.url) {
+        setTimeout(function() {
+          process.exit(0);
+        }, 10000);
+      }
       url = message.url;
       log("WEBSOCKET new url: " + url);
     }
