@@ -156,7 +156,7 @@ function buildPayloads(afterwork) {
       // build persons string
       var persons = "";
       for (let checkin of venue) {
-        persons += checkin.fname + checkin.lname.charAt(0).toUpperCase() + ', ';
+        persons += checkin.fname.replace(/\W/g, '') + checkin.lname.replace(/\W/g, '').charAt(0).toUpperCase() + ', ';
       }
       persons = persons.slice(0, -2);
       // build payload
