@@ -1,8 +1,9 @@
+# copy to serverless.yml and fill configs
 service: afterwork-alert-feed-parsing
 
 provider:
   name: aws
-  profile: gofore-crew
+  profile: {{profile}}
   runtime: nodejs6.10
   region: eu-west-1
 
