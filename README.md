@@ -1,21 +1,17 @@
 # afterwork-alert
 This is Untappd-Slack integration for alerting Slack-users of afterwork going on somewhere.
-Untappd polling periodically and if more than one friend is drinking within small enough period of time, notifies to Slack that afterwork is being held.
 
-* Config includes loopingTime as well as bot name and channels of multiple cities, based on venue locations
-* more to come...
+Application is build of two different parts. First is parsing untappd feed and notifying Slack when there's afterwork group somewhere. Second is creating friend requests and approving friend requests. Both are run with Serverless Framework with Amazon Lambdas and API Gateway. 
 
-# Start application in prod or dev mode
-Production mode will use production configs and dev will use development configs.
-* ```npm run prod ```
-* ```npm run dev ```
+First create aws account. Then copy default_serverless.yml to serverless.yml and fill it with your own credentials and other nescessary configs. Then run, in linux with command 'sls deploy'.
 
-* Run docker-image
-
-```docker
-    docker build -t afterwork-alert .
-    docker run afterwork-alert
-```
+# Example of logic
+* Runs once in every 10 minutes
+* Untappd feed from last 20 minutes
+* Creates groups from that time with logic
+    * At least 1 checkin is from last 10 minute period from different Untappd-users
+    * At least 2 checkins total within last 20 minutes
+* This way application may notify twice from some checkins, if group size increases in next 10 minute period, but that is not a problem
 
 # Backlog
 Ideas, Backlog, In Progress and stuff are located at Repositorys project tab https://github.com/Jevli/afterwork-alert/projects/1
