@@ -4,21 +4,22 @@ var UntappdClient = require("node-untappd");
 var _ = require('lodash');
 var moment = require('moment');
 
-var UntappdAccessToken = process.env.UNTAPPD_ACCESS_TOKEN;
-var SlackWebhook = process.env.SLACK_WEBHOOK;
-var whatIsCountedAsAfterwork = process.env.WHAT_IS_COUNTED_AS_AFTERWORK;
-var whatIsCountedAfterPrevious = process.env.WHAT_IS_COUNTED_AS_PREVIOUS;
-var fallbackChannel = process.env.FALLBACK_CHANNEL;
-var botname = process.env.BOTNAME;
+// Environment
+const UntappdAccessToken = process.env.UNTAPPD_ACCESS_TOKEN;
+const SlackWebhook = process.env.SLACK_WEBHOOK;
+const afterworkTimeSequence = process.env.AFTERWORK_TIME_SEQUENCE;
+const fallbackChannel = process.env.FALLBACK_CHANNEL;
+const botname = process.env.BOTNAME;
 
-var timeFormat = 'ddd, DD MMM YYYY HH:mm:ss +0000';
+const timeFormat = 'ddd, DD MMM YYYY HH:mm:ss Z';
 
+// Create clients
 var untappd = new UntappdClient();
 untappd.setAccessToken(UntappdAccessToken);
-
 var slack = new Slack();
 slack.setWebhook(SlackWebhook);
 
+// 
 function getUntappdFeed() {
   return new Promise(function(resolve, reject) {
     untappd.activityFeed(function (err, obj) {
@@ -47,20 +48,22 @@ function getUntappdFeed() {
   });
 }
 
+// 
 function parseAfterworkers(feed) {
   return new Promise(function(resolve, reject) {
-    // subtract twice to get afterworks between loops
-    var earliest_allowed_checkin = moment().utc().subtract({ minutes: whatIsCountedAsAfterwork*2 });
-    console.log("PARSER earliest: " + earliest_allowed_checkin.toString());
+    var earliestAllowedCheckin = moment().utc().subtract({ minutes: afterworkTimeSequence });
+    var countedAsAfterwork = moment().utc().subtract({ minutes: afterworkTimeSequence/2 });
+    console.log("PARSER arliest: " + earliestAllowedCheckin.toString());
     var afterwork = _.chain(feed)
       .sortBy(function(checkin) {
         return moment(checkin.time, timeFormat);
       })
       .filter(function(checkin) {
-        console.log("PARSER " + checkin.fname + checkin.lname.charAt(0).toUpperCase() + " (" + checkin.vname + "): "
-          + moment(checkin.time, timeFormat).utc().toString());
+        console.log("PARSER " + checkin.fname + checkin.lname.charAt(0).toUpperCase() 
+                    + " (" + checkin.vname + "): "
+                    + moment(checkin.time, timeFormat).utc().toString());
 
-        return moment(checkin.time, timeFormat).utc().isAfter(earliest_allowed_checkin) // Not too long time ago
+        return moment(checkin.time, timeFormat).utc().isAfter(earliestAllowedCheckin) // Not too long time ago
           && (checkin.vid)// has to have venue
       })
       // Group by venue
@@ -68,24 +71,19 @@ function parseAfterworkers(feed) {
         return checkin.vid;
       })
       .values()
-      .map(function (checkInsInOneVenue) { // Do this for all users grouped by venue
-        return checkInsInOneVenue.reduce(function(a, b) {
-          if(a.length === 0) { // as first
-            a.push(b);
-            return a;
-          }
-          var isAW = isCountedInAW(a, b);
-          if(a.length === 1 && !isAW) { // if not with first, change this to first
-            a.pop();
-            a.push(b);
-            return a;
-          }
-          if(a.length > 0 && isAW) { // if aw with previous, add
-            a.push(b);
-            return a;
-          }
-          return a;
-        }, []);
+      .map(function (checkinsInOneVenue) { // Do this for all users grouped by venue
+        var checkinsOnLaterHalf = _.chain(checkinsInOneVenue)
+        .filter(function(checkin) {
+          return moment(checkin.time, timeFormat).utc().isAfter(countedAsAfterwork)
+        })
+        .uniqBy('uid')
+        .value();
+
+        if (checkinsOnLaterHalf.length > 0) {
+          return _.uniqBy(checkinsInOneVenue, 'uid');
+        } else {
+          return [];
+        }
       })
       // Has to have more than one user in same venue
       .filter(function(elem) {
@@ -97,21 +95,7 @@ function parseAfterworkers(feed) {
   });
 }
 
-// a: list of current checkins which are having AW
-// b: checkin to be tested against a
-function isCountedInAW(a, b) {
-  var min = moment(a[0].time, timeFormat); // First one's checkin time
-  var max = a.length < 2
-    ? moment(min).add({ minutes: whatIsCountedAsAfterwork }) // First one + maxTime
-    : moment(a[a.length - 1].time, timeFormat).add({ minutes: whatIsCountedAfterPrevious }); // Previous added + maxTimeAfterPrevious
-  var current = moment(b.time, timeFormat);
-  if (current.isBetween(min, max)
-    && (a.find(function(checkin) { return checkin.uid === b.uid }) === undefined)) {
-    return true;
-  }
-  return false;
-}
-
+// 
 function buildPayloads(afterwork) {
   return new Promise(function(resolve, reject) {
     // for every venue, send message
@@ -126,12 +110,11 @@ function buildPayloads(afterwork) {
       }
       persons = persons.slice(0, -2);
       // build payload
-      // TODO find better way to save city: channel -values
+      // TODO find better way to save {city: channel} -values
       var channel = process.env["CHANNEL_" + venue[0].city.toUpperCase()] || fallbackChannel;
       var payload = {
         'text': venue.length + ' henkilöä afterworkilla sijainnissa ' + venue[0].vname + ' (' + persons + ')',
         'channel': channel,
-        // 'channel': '#afterwork-alert',
         'username': botname
       }
       if (channel && botname) {
@@ -157,13 +140,11 @@ exports.handler = function(event, context, callback) {
     .then(parseAfterworkers)
     .then(buildPayloads)
     .then(function(resolve, reject) {
-      console.log(resolve);
       resolve.map(function(payload) {
         slack.webhook(payload, function(err, response) {
           console.log("SLACK response: ", response);
+          callback(null, response);
         });
-        console.log("SLACK resolve: ", payload);
-        callback(null, "Success");
       });
     })
     .catch(function(reason) {
@@ -173,3 +154,4 @@ exports.handler = function(event, context, callback) {
 }
 
 // exports.handler(null, null, function(err, res) {});
+
