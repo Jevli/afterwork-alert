@@ -1,17 +1,43 @@
 # afterwork-alert
-This is Untappd-Slack integration for alerting Slack-users of afterwork going on somewhere.
+This is Untappd-Slack integration for alerting Slack-users when there is afterwork going on somewhere. Slack users should have Untappd accounts and Slack team needs to use one users Untappd account or create account for bot in Untappd. That users (or bots) Untappd-friends checkins are followed and notified to Slack.
 
-Application is build of two different parts. First is parsing untappd feed and notifying Slack when there's afterwork group somewhere. Second is creating friend requests and approving friend requests. Both are run with Serverless Framework with Amazon Lambdas and API Gateway. 
+Application is build of two different parts. First is parsing untappd feed and notifying Slack when there's afterwork group somewhere. Second is for creating Untappd friend requests and approving friend requests via Slack. Both are run with Serverless Framework in Amazon Web Services Lambdas and API Gateway. 
 
-First create aws account. Then copy default_serverless.yml to serverless.yml and fill it with your own credentials and other nescessary configs. Then run, in linux with command 'sls deploy'.
+# Installation to AWS with Serverless Framework tools
+* Create AWS Account
+* Install serverless (https://serverless.com/framework/docs/providers/aws/guide/installation/)
+* Add your aws profile in to ~/.aws/credentials
+* Create incoming webhook to Slack
+* Create slash command to Slack
+* Get Untappd Access Token
+* Set environment variables and deploy
+`` bash
+export AFTWRK_PROFILE=your-aws-profile
+export AFTWRK_SLACK_WEBHOOK=slack-incoming-webhook-url
+export AFTWRK_SLACK_SLASH_TOKEN=slack-slash-token
+export AFTWRK_UNTAPPD_ACCESS_TOKEN=untappd-access-token
+export AFTWRK_BOTNAME=your-slack-botname
+export AFTWRK_FALLBACK_CHANNEL=#afterwork-alert
 
-# Example of logic
+cd untappdFeedParser/
+npm install
+sls deploy -v
+cd ../commands/
+npm install
+sls deploy -v
+``
+
+# Example of parsing logic
 * Runs once in every 10 minutes
-* Untappd feed from last 20 minutes
+* Fetches Untappd feed from last 20 minutes
 * Creates groups from that time with logic
     * At least 1 checkin is from last 10 minute period from different Untappd-users
-    * At least 2 checkins total within last 20 minutes
-* This way application may notify twice from some checkins, if group size increases in next 10 minute period, but that is not a problem
+    * At least 2 checkins total within last 20 minutes from different Untappd-users
+
+# Slack slash commands (only friend requesting)
+* If have given slash commands name 'KaljaSieppo' 
+* Command in Slack: '/KaljaSieppo untappd-username'
+* Checks if untappd-username exists in Untappd and sends Friend-request. Informs if request was made already or user have made Friend-request to bot user
 
 # Backlog
 Ideas, Backlog, In Progress and stuff are located at Repositorys project tab https://github.com/Jevli/afterwork-alert/projects/1
@@ -29,3 +55,4 @@ Ideas, Backlog, In Progress and stuff are located at Repositorys project tab htt
     * Take next oldest checkin from venues checkin list and test it
 * At this stage, the main list includes lists of aw-groups. Each group is in different venue. 
 * Last, remove groups which don't have minimum amount of checkins
+* Lambda Refactoring, stateless architecture and more configs on Slack and AWS. Serverless Framework made AWS configs much easier.

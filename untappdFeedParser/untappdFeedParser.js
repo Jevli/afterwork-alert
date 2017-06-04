@@ -151,7 +151,7 @@ exports.handler = function(event, context, callback) {
       console.log("ERROR reason: ", reason);
       callback(reason, null);
     });
-}
+};
 
 // exports.handler(null, null, function(err, res) {});
 
