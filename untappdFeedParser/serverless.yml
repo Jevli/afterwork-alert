@@ -5,6 +5,7 @@ provider:
   profile: ${env:AFTWRK_PROFILE}
   runtime: nodejs6.10
   region: eu-west-1
+  memory: 128
 
 package:
   include:
