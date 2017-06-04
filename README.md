@@ -11,7 +11,7 @@ Application is build of two different parts. First is parsing untappd feed and n
 * Create slash command to Slack
 * Get Untappd Access Token
 * Set environment variables and deploy
-`` bash
+``
 export AFTWRK_PROFILE=your-aws-profile
 export AFTWRK_SLACK_WEBHOOK=slack-incoming-webhook-url
 export AFTWRK_SLACK_SLASH_TOKEN=slack-slash-token
