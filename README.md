@@ -2,6 +2,7 @@
 This is Untappd-Slack integration for alerting Slack-users when there is afterwork going on somewhere. Slack users should have Untappd accounts and Slack team needs to use one users Untappd account or create account for bot in Untappd. That users (or bots) Untappd-friends checkins are followed and notified to Slack.
 
 Application is build of two different parts. First is parsing untappd feed and notifying Slack when there's afterwork group somewhere. Second is for creating Untappd friend requests and approving friend requests via Slack. Both are run with Serverless Framework in Amazon Web Services Lambdas and API Gateway. 
+![alt text](https://raw.githubusercontent.com/jevli/afterwork-alert/master/drawio.png)
 
 # Installation to AWS with Serverless Framework tools
 * Create AWS Account
