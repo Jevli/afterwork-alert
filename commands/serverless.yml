@@ -1,0 +1,29 @@
+service: afterwork-alert-commands
+
+provider:
+  name: aws
+  profile: ${env:AFTWRK_PROFILE}
+  runtime: nodejs6.10
+  region: eu-west-1
+
+package:
+  include:
+    - node_modules/**
+    - friendRequest.js
+  exclude:
+    - ./**
+
+functions:
+  # Handles commands
+  command:
+    handler: friendRequest.handler 
+    environment:
+      SLACK_WEBHOOK: ${env:AFTWRK_SLACK_WEBHOOK}
+      SLACK_SLASH_TOKEN: ${env:AFTWRK_SLACK_SLASH_TOKEN}
+      UNTAPPD_ACCESS_TOKEN: ${env:AFTWRK_UNTAPPD_ACCESS_TOKEN}
+      BOTNAME: ${env:AFTWRK_BOTNAME}
+
+    events:
+      - http:
+          path: command
+          method: post
