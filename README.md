@@ -1,9 +1,9 @@
 # afterwork-alert
 This is Untappd-Slack integration for alerting Slack-users when there is afterwork going on somewhere. Slack users should have Untappd accounts and Slack team needs to use one users Untappd account or create account for bot in Untappd. That users (or bots) Untappd-friends checkins are followed and notified to Slack.
-![alt text](https://raw.githubusercontent.com/jevli/afterwork-alert/master/notify.png)
+![alt text](https://raw.githubusercontent.com/jevli/afterwork-alert/master/images/notify.png)
 
 Application is build of two different parts. First is parsing untappd feed and notifying Slack when there's afterwork group somewhere. Second is for creating Untappd friend requests and approving friend requests via Slack. Both are run with Serverless Framework in Amazon Web Services Lambdas and API Gateway. 
-![alt text](https://raw.githubusercontent.com/jevli/afterwork-alert/master/drawio.png)
+![alt text](https://raw.githubusercontent.com/jevli/afterwork-alert/master/images/drawio.png)
 
 # Installation to AWS with Serverless Framework tools
 * Create AWS Account
@@ -43,13 +43,13 @@ sls deploy -v
 * Creates groups from that time with logic
     * At least 1 checkin is from last 10 minute period from different Untappd-users
     * At least 2 checkins total within last 20 minutes from different Untappd-users
-![alt text](https://raw.githubusercontent.com/jevli/afterwork-alert/master/parsingLogic.png)
+![alt text](https://raw.githubusercontent.com/jevli/afterwork-alert/master/images/parsingLogic.png)
 
 # Slack slash commands (only friend requesting)
 * If have given slash commands name 'KaljaSieppo' 
 * Command in Slack: '/KaljaSieppo untappd-username'
 * Checks if untappd-username exists in Untappd and sends Friend-request. Informs if request was made already or user have made Friend-request to bot user
-![alt text](https://raw.githubusercontent.com/jevli/afterwork-alert/master/friendRequest.png)
+![alt text](https://raw.githubusercontent.com/jevli/afterwork-alert/master/images/friendRequest.png)
 
 # Backlog
 Ideas, Backlog, In Progress and stuff are located at Repositorys project tab https://github.com/Jevli/afterwork-alert/projects/1
