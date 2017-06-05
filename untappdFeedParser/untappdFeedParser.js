@@ -136,6 +136,7 @@ function sendToSlack(channel, message) {
 }
 
 exports.handler = function(event, context, callback) {
+  console.log("1. Fetch feed 2. Parse afterworks 3. Build payloads 4. Send to Slack");
   getUntappdFeed()
     .then(parseAfterworkers)
     .then(buildPayloads)

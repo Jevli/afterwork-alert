@@ -29,14 +29,14 @@ const untappdUserPage = "https://untappd.com/user/";
 // };
 
 // accept pending request
-var acceptPending = function(user_uid, cb) {
+var acceptPending = function(user, user_uid, cb) {
   untappd.acceptFriends(function(err, obj) {
     if (err) {
       cb(err, "Virhe kaveripyyntösi hyväksymisessä.");
     } else if (obj.meta.code !== 200) {
       cb(obj, "Kaveripyyntösi hyväksynnässä oli jokin ongelma.");
     } else {
-      cb(null, "Hyväksyin sun kaveripyyntösi!");
+      cb(null, "Hyväksyin Untappd-tunnuksen " + user + " kaveripyynnön!");
     }
   }, {TARGET_ID: user_uid});
 };
@@ -62,20 +62,20 @@ var createFriendRequest = function(user, cb) {
         }
         if (friendReqObj && friendReqObj.meta && friendReqObj.meta.code === 500) {
           if (friendReqObj.meta.error_detail === 'This request is pending your approval.') {
-            acceptPending(obj.response.user.uid, cb);
+            acceptPending(user, obj.response.user.uid, cb);
           }
           else if (friendReqObj.meta.error_detail === "This request is pending the user\'s approval.") {
-            cb(null, "Sulle on jo kaveripyyntö odottamassa. Käy hyväksymässä osoitteessa " + untappdUserPage + user);
+            cb(null, "Untappd-käyttäjälle " + user + " on jo kaveripyyntö odottamassa. Käy hyväksymässä osoitteessa " + untappdUserPage + user);
           }
           else if (friendReqObj.meta.error_detail === 'You are already friends with this user.') {
-            cb(null, "Ollaan jo kavereita!");
+            cb(null, "Untappd-käyttäjä " + user + " ja minä ollaan jo kavereita!");
           }
           else {
             cb(friendReqObj, "Tuntematon virhe");
           }
         }
         else if (friendReqObj && friendReqObj.meta && friendReqObj.meta.code === 200) {
-          cb(null, "Tein sulle kaveripyynnön! Käy hyväksymässä osoitteessa " + untappdUserPage + user);
+          cb(null, "Untappd-käyttäjä " + user  + ": tein sulle kaveripyynnön! Käy hyväksymässä osoitteessa " + untappdUserPage + user);
         }
       }, {TARGET_ID: obj.response.user.uid}); // for requestFriends
     } else {
@@ -99,15 +99,14 @@ exports.handler = function(event, context, callback) {
     });
   } else {
     console.log(body.token, slack_slash_token);
-
     console.log(body.user_name + ": " +  body.text);
 
     var words = body.text.split("+");
-    if (words.length !== 1 || (words.length > 0 && words[0].toLowerCase() === "help")) {
+    if (words.length !== 1 || (words.length > 0 && (words[0].toLowerCase().trim() === "help" || words[0].trim() === ""))) {
       console.log("SUCCESS: ei komento");
       callback(null, {
         statusCode: 200,
-        body: "Käske Seppoa tekemään kaveripyyntö '/KaljaSieppo untappd-nimimerkki'"
+        body: "Käske Seppoa tekemään tai hyväksymään kaveripyyntö '/KaljaSieppo untappd-nimimerkki'"
       });
     } else {
       createFriendRequest(body.text, function(err, value) { 
@@ -121,7 +120,11 @@ exports.handler = function(event, context, callback) {
           console.log("SUCCESS", value);
           callback(null, {
             statusCode: 200,
-            body: value
+            // body: value
+            body: JSON.stringify({
+              "response_type": "in_channel",
+              "text": value
+            })
           });
         }
       });
