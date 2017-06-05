@@ -54,16 +54,12 @@ sls deploy -v
 Ideas, Backlog, In Progress and stuff are located at Repositorys project tab https://github.com/Jevli/afterwork-alert/projects/1
 
 # Challenges and solutions
-## How to parse Untappd activity feed to recognize afterwork groups
-* Sort checkins by time
-* Filter too old checkins, checkins without venue and checkins which are already used in some previous group
-* Group checkins by venue. After this, main level list elements are lists which each include one venues checkins.
- Run a reduce function for each venues list:
-    * Loop through oldest checkin to the newest:
-    * If aw-group is empty, add checkin to the aw-group
-    * If aw-group is not empty and checkin is close enough (30min) to the first one in aw-group or close enough (10min) to the last in aw-group -> add checkin to the aw-group
-    * If aw-group size is one and checkin not close enough, clear aw-group and add checkin to the aw-group (as first in aw-group)
-    * Take next oldest checkin from venues checkin list and test it
-* At this stage, the main list includes lists of aw-groups. Each group is in different venue. 
-* Last, remove groups which don't have minimum amount of checkins
-* Lambda Refactoring, stateless architecture and more configs on Slack and AWS. Serverless Framework made AWS configs much easier.
+* Time handling has been pain in the ass. Moment.js made things a lot easier.
+* All the parsing and stuff could be done without lodash. But lodash makes development much enjoyable.
+    * Parsing logic originally had more complex logic than today. It filtered out all the checkins which had been used previously with some aw-notify and few other conditions.
+    * Took lot of time to get logic together, but in the end it is quite easy to understand.
+    * Logic was simplified after AWS Lambda refactor
+* Lambda refactoring, stateless architecture and more configs on Slack and AWS. Serverless Framework made AWS configs much easier.
+    * Simplified parsin algorithm so it doesn't need to save used checkins. 
+    * Could solve this also by adding AWS DynamoDB 
+
