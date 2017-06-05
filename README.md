@@ -40,6 +40,7 @@ sls deploy -v
 * If have given slash commands name 'KaljaSieppo' 
 * Command in Slack: '/KaljaSieppo untappd-username'
 * Checks if untappd-username exists in Untappd and sends Friend-request. Informs if request was made already or user have made Friend-request to bot user
+![alt text](https://raw.githubusercontent.com/jevli/afterwork-alert/master/friendRequest.png)
 
 # Backlog
 Ideas, Backlog, In Progress and stuff are located at Repositorys project tab https://github.com/Jevli/afterwork-alert/projects/1
