@@ -43,7 +43,17 @@ sls deploy -v
 * Creates groups from that time with logic
     * At least 1 checkin is from last 10 minute period from different Untappd-users
     * At least 2 checkins total within last 20 minutes from different Untappd-users
-![alt text](https://raw.githubusercontent.com/jevli/afterwork-alert/master/images/parsingLogic.png)
+    
+| Time (min) | Checkins | Found Afterwork at the end of interval |
+| ---------- | -------- | -------------------------------------- |
+| 0-10       | A, B     | (A, B)                                 |
+| 10-20      | C        | (A, B, C)                              |
+| 20-30      | D        | (C, D)                                 |
+| 30-40      |          | ( )                                    |
+| 40-50      | E, F     | (E, F)                                 |
+| 50-60      |          | ( )                                    |
+| 60-70      | G        | (G)                                    |
+
 
 # Slack slash commands (only friend requesting)
 * If have given slash commands name 'KaljaSieppo' 
