@@ -6,11 +6,18 @@ Application is build of two different parts. First is parsing untappd feed and n
 
 # Installation to AWS with Serverless Framework tools
 * Create AWS Account
-* Install serverless (https://serverless.com/framework/docs/providers/aws/guide/installation/)
+* Install serverless
+    * https://serverless.com/framework/docs/providers/aws/guide/installation/
 * Add your aws profile in to ~/.aws/credentials
 * Create incoming webhook to Slack
+    * Save webhook url to AFTWRK_SLACK_WEBHOOK environment variable as shown below
 * Create slash command to Slack
+    * Customize Slack -> Configure Apps -> Custom Integrations -> Slash Commands -> Add Configuration
+    * URL is address for the AWS Lambdas API GATEWAY address
+    * Token should be saved in AFTWRK_SLACK_SLASH_TOKEN environment variable as shown below
+    * Method POST
 * Get Untappd Access Token
+    * https://untappd.com/api/register
 * Set environment variables and deploy
 
 ```
@@ -35,6 +42,7 @@ sls deploy -v
 * Creates groups from that time with logic
     * At least 1 checkin is from last 10 minute period from different Untappd-users
     * At least 2 checkins total within last 20 minutes from different Untappd-users
+![alt text](https://raw.githubusercontent.com/jevli/afterwork-alert/master/parsingLogic.png)
 
 # Slack slash commands (only friend requesting)
 * If have given slash commands name 'KaljaSieppo' 
