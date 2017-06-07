@@ -71,6 +71,6 @@ Ideas, Backlog, In Progress and stuff are located at Repositorys project tab htt
     * Took lot of time to get logic together, but in the end it is quite easy to understand.
     * Logic was simplified after AWS Lambda refactor
 * Lambda refactoring, stateless architecture and more configs on Slack and AWS. Serverless Framework made AWS configs much easier.
-    * Simplified parsin algorithm so it doesn't need to save used checkins. 
+    * Simplified parsing algorithm so it doesn't need to save used checkins. 
     * Could solve this also by adding AWS DynamoDB 
 
