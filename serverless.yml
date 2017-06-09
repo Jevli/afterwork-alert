@@ -1,0 +1,85 @@
+service: afterwork-alert
+
+custom:
+  tableName: afterwork-alert-table
+  region: eu-west-1
+
+provider:
+  name: aws
+  profile: ${env:AFTWRK_PROFILE}
+  runtime: nodejs6.10
+  region: ${self:custom.region}
+  memory: 128
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:BatchWriteItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:Scan
+        - dynamodb:GetItem
+      Resource: "arn:aws:dynamodb:${self:custom.region}:*:*"
+  environment:
+    TABLE_NAME: ${self:custom.tableName}
+
+package:
+  include:
+    - node_modules/**
+    - friendRequest.js
+    - untappdFeedParser.js
+  exclude:
+    - ./**
+
+functions:
+  # Parses Untappd feed and notifies to channels
+  untappd:
+    handler: untappdFeedParser.handler
+    environment:
+      # City to channel mappings are done in runtime by possible environment variables
+      # Etc city called Lahti would search environment variable CHANNEL_LAHTI
+      # Add these as many as you want or rely on fallback channel
+      CHANNEL_TAMPERE: '#afterwork-tampere'
+      CHANNEL_JYVASKYLA: '#afterwork-jkl'
+      CHANNEL_HELSINKI: '#afterwork-helsinki'
+      # If no channel for some city, use this
+      FALLBACK_CHANNEL: ${env:AFTWRK_FALLBACK_CHANNEL}
+      SLACK_WEBHOOK: ${env:AFTWRK_SLACK_WEBHOOK}
+      BOTNAME: ${env:AFTWRK_BOTNAME}
+      UNTAPPD_ACCESS_TOKEN: ${env:AFTWRK_UNTAPPD_ACCESS_TOKEN}
+      AFTERWORK_TIME_SEQUENCE: 20
+
+    events:
+      - schedule: rate(10 minutes)
+
+  # Handles commands
+  command:
+    handler: friendRequest.handler 
+    environment:
+      SLACK_WEBHOOK: ${env:AFTWRK_SLACK_WEBHOOK}
+      SLACK_SLASH_TOKEN: ${env:AFTWRK_SLACK_SLASH_TOKEN}
+      UNTAPPD_ACCESS_TOKEN: ${env:AFTWRK_UNTAPPD_ACCESS_TOKEN}
+      BOTNAME: ${env:AFTWRK_BOTNAME}
+      DBB_TABLE: ${self:custom.tableName}
+
+    events:
+      - http:
+          path: command
+          method: post
+
+resources:
+  Resources:
+    AfterworkAlertDBBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tableName}
+        AttributeDefinitions:
+          - AttributeName: checkin_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+

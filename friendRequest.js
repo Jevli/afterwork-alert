@@ -1,21 +1,23 @@
 var Slack = require('slack-node');
 var UntappdClient = require("node-untappd");
 var _ = require('lodash');
+const AWS = require('aws-sdk');
 
 // Environment
 const untappdAccessToken = process.env.UNTAPPD_ACCESS_TOKEN;
 const SlackWebhook = process.env.SLACK_WEBHOOK;
 const botname = process.env.BOTNAME;
 const slack_slash_token = process.env.SLACK_SLASH_TOKEN;
+const dbb_table = process.env.DBB_TABLE;
+
+// Constant strings etc
+const untappdUserPage = "https://untappd.com/user/";
 
 // Create clients
 var untappd = new UntappdClient();
 untappd.setAccessToken(untappdAccessToken);
 var slack = new Slack();
 slack.setWebhook(SlackWebhook);
-
-
-const untappdUserPage = "https://untappd.com/user/";
 
 // Not used at the moment.
 // var sendToSlack = function(channel, message) {
@@ -94,12 +96,13 @@ exports.handler = function(event, context, callback) {
   .value();
 
   if (body.token !== slack_slash_token) {
+    console.log("Incorrect token: ", body.token, slack_slash_token);
     callback(null, {
       statusCode: 401
     });
   } else {
-    console.log(body.token, slack_slash_token);
     console.log(body.user_name + ": " +  body.text);
+
 
     var words = body.text.split("+");
     if (words.length !== 1 || (words.length > 0 && (words[0].toLowerCase().trim() === "help" || words[0].trim() === ""))) {

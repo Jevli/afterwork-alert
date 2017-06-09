@@ -29,10 +29,7 @@ export AFTWRK_UNTAPPD_ACCESS_TOKEN=untappd-access-token
 export AFTWRK_BOTNAME=your-slack-botname
 export AFTWRK_FALLBACK_CHANNEL=#afterwork-alert
 
-cd untappdFeedParser/
-npm install
-sls deploy -v
-cd ../commands/
+git clone git@github.com:Jevli/afterwork-alert.git
 npm install
 sls deploy -v
 ```
