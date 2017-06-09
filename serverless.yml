@@ -77,7 +77,7 @@ resources:
           - AttributeName: checkin_id
             AttributeType: S
         KeySchema:
-          - AttributeName: id
+          - AttributeName: checkin_id
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1

@@ -30,6 +30,7 @@ export AFTWRK_BOTNAME=your-slack-botname
 export AFTWRK_FALLBACK_CHANNEL=#afterwork-alert
 
 git clone git@github.com:Jevli/afterwork-alert.git
+cd afterwork-alert
 npm install
 sls deploy -v
 ```
