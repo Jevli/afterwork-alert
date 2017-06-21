@@ -27,7 +27,18 @@ export AFTWRK_SLACK_WEBHOOK=slack-incoming-webhook-url
 export AFTWRK_SLACK_SLASH_TOKEN=slack-slash-token
 export AFTWRK_UNTAPPD_ACCESS_TOKEN=untappd-access-token
 export AFTWRK_BOTNAME=your-slack-botname
+export AFTWRK_TIME_SEQUENCE=20
 export AFTWRK_FALLBACK_CHANNEL=#afterwork-alert
+
+#example cities and channels
+export AFTWRK_CITIES="TAMPERE HELSINKI JYVASKYLA"
+export AFTWRK_CHANNEL_TAMPERE="#afterwork-tampere"
+export AFTWRK_GEO_TAMPERE="61.50 23.76"
+export AFTWRK_CHANNEL_JYVASKYLA="#afterwork-jkl"
+export AFTWRK_GEO_JYVASKYLA="62.24 25.24"
+export AFTWRK_CHANNEL_HELSINKI="#afterwork-helsinki"
+export AFTWRK_GEO_HELSINKI="60.17 24.94"
+
 
 git clone git@github.com:Jevli/afterwork-alert.git
 cd afterwork-alert
