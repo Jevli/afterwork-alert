@@ -182,5 +182,5 @@ exports.handler = function(event, context, callback) {
     });
 };
 
-exports.handler(null, null, function(err, res) {});
+// exports.handler(null, null, function(err, res) {});
 
