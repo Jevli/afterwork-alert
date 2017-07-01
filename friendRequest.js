@@ -34,11 +34,11 @@ slack.setWebhook(SlackWebhook);
 var acceptPending = function(user, user_uid, cb) {
   untappd.acceptFriends(function(err, obj) {
     if (err) {
-      cb(err, "Virhe kaveripyyntösi hyväksymisessä.");
+      cb(err, "Error while accepting your friend request.");
     } else if (obj.meta.code !== 200) {
-      cb(obj, "Kaveripyyntösi hyväksynnässä oli jokin ongelma.");
+      cb(obj, "Error while accepting your friend request.");
     } else {
-      cb(null, "Hyväksyin Untappd-tunnuksen " + user + " kaveripyynnön!");
+      cb(null, "I accepted friend request from Untapdd user " + user);
     }
   }, {TARGET_ID: user_uid});
 };
@@ -48,40 +48,40 @@ var createFriendRequest = function(user, cb) {
   untappd.userInfo(function(err, obj){
     console.log("Fetched UserInfo. OBJ: ", obj);
     if (err) {
-      cb(err, "Virhe userInfon hakemisessa Untappd:sta");
+      cb(err, "Error while getting user info from Untappd.");
     } 
     if (obj && obj.meta && obj.meta.code === 500) {
       if (obj.meta.error_detail === 'There is no user with that username.') {
-        cb(obj, "Ei löytynyt käyttäjää " + user);
+        cb(obj, "Could not found user " + user);
       } else {
-        cb(obj, "Tuntematon ongelma kaveripyynnön luonnissa.");
+        cb(obj, "Unknown error on creating friend request.");
       }
     } else if (obj.meta.code === 200) {
       untappd.requestFriends(function (err, friendReqObj) {
         console.log("Requested friend. friendReqOBJ: ", friendReqObj);
         if (err) {
-          cb(err, "Virhe kaveripyynnön tekemisessä");
+          cb(err, "Error on creating friend request.");
         }
         if (friendReqObj && friendReqObj.meta && friendReqObj.meta.code === 500) {
           if (friendReqObj.meta.error_detail === 'This request is pending your approval.') {
             acceptPending(user, obj.response.user.uid, cb);
           }
           else if (friendReqObj.meta.error_detail === "This request is pending the user\'s approval.") {
-            cb(null, "Untappd-käyttäjälle " + user + " on jo kaveripyyntö odottamassa. Käy hyväksymässä osoitteessa " + untappdUserPage + user);
+            cb(null, "Friend request has already made for Untappd user " + user + ". Go and accept it at " + untappdUserPage + user);
           }
           else if (friendReqObj.meta.error_detail === 'You are already friends with this user.') {
-            cb(null, "Untappd-käyttäjä " + user + " ja minä ollaan jo kavereita!");
+            cb(null, "Untappd-user " + user + " and I are already friends!");
           }
           else {
             cb(friendReqObj, "Tuntematon virhe");
           }
         }
         else if (friendReqObj && friendReqObj.meta && friendReqObj.meta.code === 200) {
-          cb(null, "Untappd-käyttäjä " + user  + ": tein sulle kaveripyynnön! Käy hyväksymässä osoitteessa " + untappdUserPage + user);
+          cb(null, "Untappd-user " + user  + ": I made friend request for you! Go and accept it at " + untappdUserPage + user);
         }
       }, {TARGET_ID: obj.response.user.uid}); // for requestFriends
     } else {
-      cb(obj, "Tuntematon ongelma käyttäjätietojen haussa.");
+      cb(obj, "Unknown error on getting user info");
     }
   }, {"USERNAME" : user}); // for userInfo
 };
@@ -106,10 +106,10 @@ exports.handler = function(event, context, callback) {
 
     var words = body.text.split("+");
     if (words.length !== 1 || (words.length > 0 && (words[0].toLowerCase().trim() === "help" || words[0].trim() === ""))) {
-      console.log("SUCCESS: ei komento");
+      console.log("SUCCESS: not command");
       callback(null, {
         statusCode: 200,
-        body: "Käske Seppoa tekemään tai hyväksymään kaveripyyntö '/KaljaSieppo untappd-nimimerkki'"
+        body: "Command Seppo to create friend request or to accept friend request from Untappd-user with command '/KaljaSieppo untappd-username'"
       });
     } else {
       createFriendRequest(body.text, function(err, value) { 
