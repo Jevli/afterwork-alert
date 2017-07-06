@@ -12,6 +12,7 @@ const UntappdAccessToken = process.env.UNTAPPD_ACCESS_TOKEN;
 const SlackWebhook = process.env.SLACK_WEBHOOK;
 const afterworkTimeSequence = process.env.AFTERWORK_TIME_SEQUENCE;
 const fallbackChannel = process.env.FALLBACK_CHANNEL;
+const duringworkChannel = process.env.DURINGWORK_CHANNEL;
 const botname = process.env.BOTNAME;
 const cities = process.env.CITIES.split(" ").map(value => {
   return {
@@ -129,6 +130,10 @@ function buildPayloads(afterwork) {
       // build payload
       // TODO find better way to save {city: channel} -values
       var channel = process.env[util.removeDiacritics("CHANNEL_" + venue[0].city.toUpperCase())] || fallbackChannel;
+      if (moment().isBetween(moment().hours(5), moment().hours(12))) {
+        // something like this. Hopefully works.
+        channel = DURINGWORK_CHANNEL;
+      }
       let payload = {
         'text': venue.length + ' persons having a nice afterwork at venue ' + venue[0].vname + ' (' + persons + ')',
         'channel': channel,
