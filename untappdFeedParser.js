@@ -130,7 +130,7 @@ function buildPayloads(afterwork) {
       // TODO find better way to save {city: channel} -values
       var channel = process.env[util.removeDiacritics("CHANNEL_" + venue[0].city.toUpperCase())] || fallbackChannel;
       let payload = {
-        'text': venue.length + ' persons having nice afterwork at venue ' + venue[0].vname + ' (' + persons + ')',
+        'text': venue.length + ' persons having a nice afterwork at venue ' + venue[0].vname + ' (' + persons + ')',
         'channel': channel,
         'username': botname
       }
