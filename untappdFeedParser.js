@@ -144,7 +144,6 @@ function buildPayloads(afterwork) {
 
 function getNearestCitysChannel(lat, lng) {
   if (lat === undefined || lng === undefined) {
-    console.log('lat ja lng on undefined');
     return undefined;
   }
 
