@@ -47,8 +47,7 @@ function getUntappdFeed() {
         let items = obj.response.checkins.items;
         for (let item of items) {
           // City primarily from Untappd-checkins city, secondarily from checkins geolocation's closest city's channel
-          let city = util.get(item, 'venue.location.venue_city')
-            || getNearestCitysChannel(util.get(item, 'venue.location.lat'), util.get(item, 'venue.location.lng'));
+          let city = getNearestCitysChannel(util.get(item, 'venue.location.lat'), util.get(item, 'venue.location.lng'));
           afterwork.push({
             'cid': item.checkin_id,
             'time': item.created_at,
@@ -148,7 +147,7 @@ function buildPayloads(afterwork) {
 }
 
 function getNearestCitysChannel(lat, lng) {
-  if (lat === undefined || lng === undefined) {
+  if (lat === undefined || lng === undefined || lat === null || lng === null) {
     return undefined;
   }
 
