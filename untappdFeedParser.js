@@ -19,7 +19,7 @@ const cities = process.env.CITIES.split(" ").map(value => {
     city: value,
     channel: process.env['CHANNEL_' + value],
     latitude: _.head(process.env['GEO_' + value].split(" ")),
-    longitude: _.tail(process.env['GEO_' + value].split(" "))
+    longitude: _.head(_.tail(process.env['GEO_' + value].split(" ")))
   }
 });
 
@@ -36,8 +36,8 @@ let get = util.get;
 let removeDiacritics = util.removeDiacritics;
 // 
 function getUntappdFeed() {
-  return new Promise(function(resolve, reject) {
-    untappd.activityFeed(function (err, obj) {
+  return new Promise((resolve, reject) => {
+    untappd.activityFeed((err, obj) => {
       if (err) {
         reject(err);
       }
@@ -67,46 +67,39 @@ function getUntappdFeed() {
 
 // 
 function parseAfterworkers(feed) {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     let earliestAllowedCheckin = moment().utc().subtract({ minutes: afterworkTimeSequence });
     let countedAsAfterwork = moment().utc().subtract({ minutes: afterworkTimeSequence/2 });
     console.log("PARSER earliest: " + earliestAllowedCheckin.toString());
     let afterwork = _.chain(feed)
-      .sortBy(function(checkin) {
-        return moment(checkin.time, timeFormat);
-      })
-      .filter(function(checkin) {
-        console.log("PARSER " + checkin.fname + checkin.lname.charAt(0).toUpperCase() 
-                    + " (" + checkin.vname + " - " + checkin.city +"): "
-                    + moment(checkin.time, timeFormat).utc().toString());
+    .sortBy(checkin => moment(checkin.time, timeFormat))
+    .filter(checkin => {
+      console.log("PARSER " + checkin.fname + checkin.lname.charAt(0).toUpperCase()
+                  + " (" + checkin.vname + " - " + checkin.city +"): "
+                  + moment(checkin.time, timeFormat).utc().toString());
 
-        return moment(checkin.time, timeFormat).utc().isAfter(earliestAllowedCheckin) // Not too long time ago
-          && (checkin.vid)// has to have venue
-      })
-      // Group by venue
-      .groupBy(function(checkin) {
-        return checkin.vid;
-      })
-      .values()
-      .map(function (checkinsInOneVenue) { // Do this for all users grouped by venue
-        let checkinsOnLaterHalf = _.chain(checkinsInOneVenue)
-        .filter(function(checkin) {
-          return moment(checkin.time, timeFormat).utc().isAfter(countedAsAfterwork)
-        })
-        .uniqBy('uid')
-        .value();
-
-        if (checkinsOnLaterHalf.length > 0) {
-          return _.uniqBy(checkinsInOneVenue, 'uid');
-        } else {
-          return [];
-        }
-      })
-      // Has to have more than one user in same venue
-      .filter(function(elem) {
-        return elem.length > 1;
-      })
+      return moment(checkin.time, timeFormat).utc().isAfter(earliestAllowedCheckin) // Not too long time ago
+        && (checkin.vid)// has to have venue
+    })
+    // Group by venue
+    .groupBy(checkin => {
+      return checkin.vid;
+    })
+    .values()
+    .map(checkinsInOneVenue => { // Do this for all users grouped by venue
+      let checkinsOnLaterHalf = _.chain(checkinsInOneVenue)
+      .filter(checkin => moment(checkin.time, timeFormat).utc().isAfter(countedAsAfterwork))
+      .uniqBy('uid')
       .value();
+      if (checkinsOnLaterHalf.length > 0) {
+        return _.uniqBy(checkinsInOneVenue, 'uid');
+      } else {
+        return [];
+      }
+    })
+    // Has to have more than one user in same venue
+    .filter(elem => elem.length > 1)
+    .value();
     console.log("PARSER afterworkers: ", afterwork, "end of parsed afterworkers");
     resolve(afterwork);
   });
@@ -114,7 +107,7 @@ function parseAfterworkers(feed) {
 
 // 
 function buildPayloads(afterwork) {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     // for every venue, send message
     let payloads = [];
     for (let i = 0; i < afterwork.length; i++) {
@@ -151,8 +144,8 @@ function getNearestCitysChannel(lat, lng) {
     return undefined;
   }
 
-  geolib.orderByDistance({latitude: lat, longitude: lng}, cities);
-  return _.head(cities).city;
+  let sorted = geolib.orderByDistance({latitude: lat, longitude: lng}, cities);
+  return _.head(sorted).city;
 }
 
 function sendToSlack(channel, message) {
@@ -160,29 +153,29 @@ function sendToSlack(channel, message) {
     text: message,
     channel: channel,
     username: botname
-  }, function(err, res) {
+  }, (err, res) => {
     console.log(err, res);
   });
 }
 
-exports.handler = function(event, context, callback) {
+exports.handler = (event, context, callback) => {
   console.log("1. Fetch feed 2. Parse afterworks 3. Build payloads 4. Send to Slack");
   getUntappdFeed()
-    .then(parseAfterworkers)
-    .then(buildPayloads)
-    .then(function(resolve, reject) {
-      resolve.map(function(payload) {
-        console.log("payload:", payload);
-        slack.webhook(payload, function(err, response) {
-          console.log("SLACK response: ", response);
-          callback(null, response);
-        });
+  .then(parseAfterworkers)
+  .then(buildPayloads)
+  .then((resolve, reject) => {
+    resolve.map((payload) => {
+      console.log("payload:", payload);
+      slack.webhook(payload, (err, response) => {
+        console.log("SLACK response: ", response);
+        callback(null, response);
       });
-    })
-    .catch(function(reason) {
-      console.log("ERROR reason: ", reason);
-      callback(reason, null);
     });
+  })
+  .catch(reason => {
+    console.log("ERROR reason: ", reason);
+    callback(reason, null);
+  });
 };
 
 // exports.handler(null, null, function(err, res) {});
