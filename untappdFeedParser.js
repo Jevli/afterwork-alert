@@ -124,7 +124,7 @@ function buildPayloads(afterwork) {
       var channel = process.env[util.removeDiacritics("CHANNEL_" + venue[0].city.toUpperCase())] || fallbackChannel;
       if (moment().isBetween(moment().hours(5), moment().hours(12))) {
         // something like this. Hopefully works.
-        channel = DURINGWORK_CHANNEL;
+        channel = duringworkChannel;
       }
       let payload = {
         'text': venue.length + ' persons having a nice afterwork at venue ' + venue[0].vname + ' (' + persons + ')',
