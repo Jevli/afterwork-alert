@@ -126,9 +126,9 @@ function buildPayloads(afterwork) {
       if (moment().isBetween(moment().hours(5), moment().hours(12))) {
         // something like this. Hopefully works.
         channel = duringworkChannel;
-        text = 'Oh my! ' + venue.length + ' persons drinking together within work hours at venue ' + venue[0].vname + ' (' + persons + ')',
+        text = 'Oh my! ' + venue.length + ' persons drinking together within work hours at venue ' + venue[0].vname + ' (' + persons + ')';
       } else {
-        text = venue.length + ' persons having a nice afterwork at venue' + venue[0].vname + ' (' + persons + ')',
+        text = venue.length + ' persons having a nice afterwork at venue' + venue[0].vname + ' (' + persons + ')';
       }
       let payload = {
         'text': text,
