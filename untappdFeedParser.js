@@ -122,12 +122,16 @@ function buildPayloads(afterwork) {
       // build payload
       // TODO find better way to save {city: channel} -values
       var channel = process.env[util.removeDiacritics("CHANNEL_" + venue[0].city.toUpperCase())] || fallbackChannel;
+      var text = "";
       if (moment().isBetween(moment().hours(5), moment().hours(12))) {
         // something like this. Hopefully works.
         channel = duringworkChannel;
+        text = 'Oh my! ' + venue.length + ' persons drinking together within work hours at venue ' + venue[0].vname + ' (' + persons + ')',
+      } else {
+        text = venue.length + ' persons having a nice afterwork at venue' + venue[0].vname + ' (' + persons + ')',
       }
       let payload = {
-        'text': venue.length + ' persons having a nice afterwork at venue ' + venue[0].vname + ' (' + persons + ')',
+        'text': text,
         'channel': channel,
         'username': botname
       }
