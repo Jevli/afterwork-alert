@@ -35,6 +35,8 @@ package:
 functions:
   # Parses Untappd feed and notifies to channels
   untappd:
+    tags:
+      author: ${env:AFTWRK_AUTHOR}
     handler: untappdFeedParser.handler
     environment:
       # City to channel mappings are done in runtime by possible environment variables
@@ -60,7 +62,11 @@ functions:
 
   # Handles commands
   command:
+    description: Handles afterwork-alert friendRequest command
+    tags:
+      author: ${env:AFTWRK_AUTHOR}
     handler: friendRequest.handler 
+    timeout: 10
     environment:
       SLACK_WEBHOOK: ${env:AFTWRK_SLACK_WEBHOOK}
       SLACK_SLASH_TOKEN: ${env:AFTWRK_SLACK_SLASH_TOKEN}

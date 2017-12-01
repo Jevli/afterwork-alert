@@ -1,6 +1,7 @@
 var Slack = require('slack-node');
 var UntappdClient = require("node-untappd");
 var _ = require('lodash');
+var request = require('request');
 const AWS = require('aws-sdk');
 
 // Environment
@@ -103,7 +104,6 @@ exports.handler = function(event, context, callback) {
   } else {
     console.log(body.user_name + ": " +  body.text);
 
-
     var words = body.text.split("+");
     if (words.length !== 1 || (words.length > 0 && (words[0].toLowerCase().trim() === "help" || words[0].trim() === ""))) {
       console.log("SUCCESS: not command");
@@ -112,22 +112,34 @@ exports.handler = function(event, context, callback) {
         body: "Command Seppo to create friend request or to accept friend request from Untappd-user with command '/KaljaSieppo untappd-username'"
       });
     } else {
+      callback(null, {
+        statusCode: 200,
+        body: "Creating or accepting friend request, wait for a few seconds..."
+      });
+      console.log("Start creating request");
       createFriendRequest(body.text, function(err, value) { 
         if (err) {
           console.log("ERROR: ", err);
-          callback(null, {
-            statusCode: 200,
-            body: value
-          });
+          var responseBody = JSON.stringify({
+            "text": value
+          })
         } else {
           console.log("SUCCESS", value);
-          callback(null, {
-            statusCode: 200,
-            // body: value
-            body: JSON.stringify({
-              "response_type": "in_channel",
-              "text": value
-            })
+          var responseBody = {
+            "channel": decodeURIComponent(body.channel),
+            "text": value,
+            "response_type": "in_channel"
+          }
+          var host = decodeURIComponent(body.response_url);
+          // fire request
+          request({
+            url: host,
+            method: "POST",
+            json: responseBody
+          }, function(err, resp, bod) {
+            console.log("err", err);
+            console.log("resp", resp);
+            console.log("body", bod);
           });
         }
       });

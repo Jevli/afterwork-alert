@@ -6,5 +6,3 @@ var friendRequest = require("./friendRequest").handler;
 feedParser({}, {}, (err, response) => {
   console.log(err, response);
 });
-
-// friendRequest({
