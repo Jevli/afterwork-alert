@@ -1,8 +1,9 @@
-var Slack = require('slack-node');
-var UntappdClient = require("node-untappd");
-var _ = require('lodash');
-var request = require('request');
+let Slack = require('slack-node');
+const Untappd = require("untappd-js");
+let _ = require('lodash');
+let request = require('request');
 const AWS = require('aws-sdk');
+const lambda = new AWS.Lambda();
 
 // Environment
 const untappdAccessToken = process.env.UNTAPPD_ACCESS_TOKEN;
@@ -15,96 +16,96 @@ const dbb_table = process.env.DBB_TABLE;
 const untappdUserPage = "https://untappd.com/user/";
 
 // Create clients
-var untappd = new UntappdClient();
-untappd.setAccessToken(untappdAccessToken);
-var slack = new Slack();
+let untappd = new Untappd(untappdAccessToken);
+let slack = new Slack();
 slack.setWebhook(SlackWebhook);
 
-// Not used at the moment.
-// var sendToSlack = function(channel, message) {
-//   slack.api('chat.postMessage', {
-//     text: message,
-//     channel: channel,
-//     username: botname
-//   }, function(err, res) {
-//     console.log(err, res);
-//   });
-// };
-
-// accept pending request
-var acceptPending = function(user, user_uid, cb) {
-  untappd.acceptFriends(function(err, obj) {
-    if (err) {
-      cb(err, "Error while accepting your friend request.");
-    } else if (obj.meta.code !== 200) {
-      cb(obj, "Error while accepting your friend request.");
-    } else {
-      cb(null, "I accepted friend request from Untapdd user " + user);
-    }
-  }, {TARGET_ID: user_uid});
-};
-
 // Create friend request from untappd
-var createFriendRequest = function(user, cb) {
-  untappd.userInfo(function(err, obj){
-    console.log("Fetched UserInfo. OBJ: ", obj);
-    if (err) {
-      cb(err, "Error while getting user info from Untappd.");
-    } 
-    if (obj && obj.meta && obj.meta.code === 500) {
-      if (obj.meta.error_detail === 'There is no user with that username.') {
-        cb(obj, "Could not found user " + user);
-      } else {
-        cb(obj, "Unknown error on creating friend request.");
-      }
-    } else if (obj.meta.code === 200) {
-      untappd.requestFriends(function (err, friendReqObj) {
-        console.log("Requested friend. friendReqOBJ: ", friendReqObj);
-        if (err) {
-          cb(err, "Error on creating friend request.");
+let createFriendRequest = (username) => {
+  return new Promise((resolve, reject) => {
+    untappd.userInfo({USERNAME: username})
+      .then((data) => {
+        if (data.meta.code === 200) {
+          console.log("UserInfo fetched");
+          return untappd.requestFriends({TARGET_ID: data.response.user.uid});
         }
-        if (friendReqObj && friendReqObj.meta && friendReqObj.meta.code === 500) {
-          if (friendReqObj.meta.error_detail === 'This request is pending your approval.') {
-            acceptPending(user, obj.response.user.uid, cb);
-          }
-          else if (friendReqObj.meta.error_detail === "This request is pending the user\'s approval.") {
-            cb(null, "Friend request has already made for Untappd user " + user + ". Go and accept it at " + untappdUserPage + user);
-          }
-          else if (friendReqObj.meta.error_detail === 'You are already friends with this user.') {
-            cb(null, "Untappd-user " + user + " and I are already friends!");
-          }
-          else {
-            cb(friendReqObj, "Tuntematon virhe");
+      }).then((data) => {
+        if (data.meta.code === 200) {
+          console.log("FriendRequest successful");
+          return resolve({status: 200, message:"Untappd-user " + username + ": I made friend request for you! Go and accept it at " + untappdUserPage + username});
+        }
+      }).catch((reason) => { // Catch reject and handle. Designed to work this way...
+        console.log("Can't create friendRequest");
+        if (reason.response.status === 500) {
+          if (reason.response.data.meta.error_detail === "This request is pending the user\'s approval.") {
+            console.log("pending request");
+            return new Promise((resolve, reject) => {
+              resolve({status: 200, message: "Untappd-user " + username + ": I have already made friend request for you! Go and accept it at " + untappdUserPage + username});
+            });
+          } else if (reason.response.data.meta.error_detail === 'You are already friends with this user.') {
+            console.log("already friends");
+            return new Promise((resolve, reject) => {
+              resolve({status: 200, message: "Untappd-user " + username + ": We are already friends!"});
+            });
+          } else if (reason.response.data.meta.error_detail === 'This request is pending your approval.') {
+            console.log("accepting request");
+            return untappd.acceptFriends({TARGET_ID: reason.config.params.TARGET_ID});
+          } else if (reason.response.data.meta.error_detail === 'There is no user with that username.') {
+            console.log("no user with that name");
+            return new Promise((resolve, reject) => {
+              resolve({status: 200, message: "There is no user with name: " + username});
+            });
+          } else {
+            return new Promise((resolve,reject) => {
+              reject("Unknown Server Error")
+            });
           }
         }
-        else if (friendReqObj && friendReqObj.meta && friendReqObj.meta.code === 200) {
-          cb(null, "Untappd-user " + user  + ": I made friend request for you! Go and accept it at " + untappdUserPage + user);
+      }).then((data) => {
+        if (data && data.meta) {
+          console.log(data);
+          if (data.meta.code === 200) {
+            resolve({status: 200, message: "Untappd-user " + username + ": I accepted your friend request!"});
+          } else {
+            reject(data);
+          }
         }
-      }, {TARGET_ID: obj.response.user.uid}); // for requestFriends
-    } else {
-      cb(obj, "Unknown error on getting user info");
-    }
-  }, {"USERNAME" : user}); // for userInfo
+        if (data && data.status === 200) {
+          resolve(data);
+        } else {
+          reject(data);
+        }
+      }).catch((reason) => {
+        console.log(reason);
+      });
+  });
 };
 
-exports.handler = function(event, context, callback) {
-  var body = _.chain(event.body)
-  .split("&")
-  .map(function(n) {
-    return _.split(n, "=");
-  })
-  .fromPairs()
-  .value();
 
+// Handler for lambda
+exports.handler = (event, context, callback) => {
+  let body;
+  if (event.slackEvent) {
+    // so called 'second phase' handling
+    body = event.slackEvent;
+  } else {
+    body = _.chain(event.body)
+      .split("&")
+      .map((n) => {
+        return _.split(n, "=");
+      })
+      .fromPairs()
+      .value();
+  }
   if (body.token !== slack_slash_token) {
     console.log("Incorrect token: ", body.token, slack_slash_token);
     callback(null, {
       statusCode: 401
     });
-  } else {
+  } else if (!event.slackEvent) {
+    // 'first phase' handling
     console.log(body.user_name + ": " +  body.text);
-
-    var words = body.text.split("+");
+    let words = body.text.split("+");
     if (words.length !== 1 || (words.length > 0 && (words[0].toLowerCase().trim() === "help" || words[0].trim() === ""))) {
       console.log("SUCCESS: not command");
       callback(null, {
@@ -112,38 +113,56 @@ exports.handler = function(event, context, callback) {
         body: "Command Seppo to create friend request or to accept friend request from Untappd-user with command '/KaljaSieppo untappd-username'"
       });
     } else {
-      callback(null, {
-        statusCode: 200,
-        body: "Creating or accepting friend request, wait for a few seconds..."
-      });
-      console.log("Start creating request");
-      createFriendRequest(body.text, function(err, value) { 
-        if (err) {
-          console.log("ERROR: ", err);
-          var responseBody = JSON.stringify({
-            "text": value
-          })
-        } else {
-          console.log("SUCCESS", value);
-          var responseBody = {
-            "channel": decodeURIComponent(body.channel),
-            "text": value,
-            "response_type": "in_channel"
-          }
-          var host = decodeURIComponent(body.response_url);
-          // fire request
-          request({
-            url: host,
-            method: "POST",
-            json: responseBody
-          }, function(err, resp, bod) {
-            console.log("err", err);
-            console.log("resp", resp);
-            console.log("body", bod);
-          });
-        }
+      console.log("createFriendRequest...");
+      return new Promise((resolve, reject) => {
+        lambda.invoke({
+          FunctionName: context.functionName,
+          InvocationType: 'Event',
+          Payload: JSON.stringify({
+            slackEvent: body // use this to recognize 'second phase'
+          }),
+          Qualifier: context.functionVersion
+        }, (err, done) => {
+          if (err) return reject(err);
+          resolve();
+        });
+      }).then(() => {
+        console.log("Send fast response to Slack");
+        callback(null, {
+          statusCode: 200,
+          body: "Creating or accepting friend request, wait for a few seconds..."
+        });
       });
     }
+  } else {
+    // so called 'second phase' handling'
+    createFriendRequest(body.text)
+      .then((data) => {
+        console.log("friendRequest handled");
+        if (data.status === 200) {
+          let responseBody = {
+            "channel": decodeURIComponent(body.channel),
+            "text": data.message,
+            "response_type": "in_channel"
+          }
+          if (body.response_url && responseBody) {
+            let host = decodeURIComponent(body.response_url);
+            console.log("Sending delayed response to [" + host + "] after success: ", responseBody);
+            // fire request
+            request({
+              url: host,
+              method: "POST",
+              json: responseBody
+            });
+          } else {
+            // debugging probably...
+            console.log("Can't send response");
+          }
+        } else {
+          reject(data);
+        }
+      }).catch((reason) => {
+        console.log("Error with Slack delayed response: ", reason);
+      });
   }
 };
-

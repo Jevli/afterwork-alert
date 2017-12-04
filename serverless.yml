@@ -20,6 +20,10 @@ provider:
         - dynamodb:Scan
         - dynamodb:GetItem
       Resource: "arn:aws:dynamodb:${self:custom.region}:*:*"
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource: "arn:aws:lambda:${self:custom.region}:*"
   environment:
     TABLE_NAME: ${self:custom.tableName}
 
@@ -56,16 +60,15 @@ functions:
       BOTNAME: ${env:AFTWRK_BOTNAME}
       UNTAPPD_ACCESS_TOKEN: ${env:AFTWRK_UNTAPPD_ACCESS_TOKEN}
       AFTERWORK_TIME_SEQUENCE: ${env:AFTWRK_TIME_SEQUENCE}
-
     events:
       - schedule: rate(10 minutes)
 
   # Handles commands
   command:
-    description: Handles afterwork-alert friendRequest command
+    description: Handles afterwork-alert commands
     tags:
       author: ${env:AFTWRK_AUTHOR}
-    handler: friendRequest.handler 
+    handler: friendRequest.handler
     timeout: 10
     environment:
       SLACK_WEBHOOK: ${env:AFTWRK_SLACK_WEBHOOK}
@@ -73,7 +76,6 @@ functions:
       UNTAPPD_ACCESS_TOKEN: ${env:AFTWRK_UNTAPPD_ACCESS_TOKEN}
       BOTNAME: ${env:AFTWRK_BOTNAME}
       DBB_TABLE: ${self:custom.tableName}
-
     events:
       - http:
           path: command
