@@ -9,7 +9,6 @@
     "lodash": "^4.17.4",
     "moment": "^2.17.0",
     "node-geocoder": "^3.16.0",
-    "node-untappd": "^0.4.1",
     "request": "^2.83.0",
     "slack-node": "^0.1.8",
     "untappd-js": "^1.0.3"

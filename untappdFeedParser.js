@@ -1,7 +1,7 @@
 "use strict";
 
 const Slack = require("slack-node");
-const UntappdClient = require("node-untappd");
+const Untappd = require("untappd-js");
 const _ = require('lodash');
 const moment = require('moment');
 const geolib = require('geolib');
@@ -26,42 +26,38 @@ const cities = process.env.CITIES.split(" ").map(value => {
 const timeFormat = 'ddd, DD MMM YYYY HH:mm:ss Z';
 
 // Create clients
-let untappd = new UntappdClient();
-untappd.setAccessToken(UntappdAccessToken);
+// let untappd = new UntappdClient();
+// untappd.setAccessToken(UntappdAccessToken);
+let untappd = new Untappd(UntappdAccessToken); // new library
 let slack = new Slack();
 slack.setWebhook(SlackWebhook);
 
 // utils
 let get = util.get;
 let removeDiacritics = util.removeDiacritics;
-// 
-function getUntappdFeed() {
+
+function formatFeed(feed) {
   return new Promise((resolve, reject) => {
-    untappd.activityFeed((err, obj) => {
-      if (err) {
-        reject(err);
+    let afterwork = [];
+    // Check what counts is really | either this or items.size etc
+    if (feed && feed.response && feed.response.checkins && feed.response.checkins.count > 0) {
+      let items = feed.response.checkins.items;
+      for (let item of items) {
+        // City primarily from Untappd-checkins city, secondarily from checkins geolocation's closest city's channel
+        let city = getNearestCitysChannel(util.get(item, 'venue.location.lat'), util.get(item, 'venue.location.lng'));
+        afterwork.push({
+          'cid': item.checkin_id,
+          'time': item.created_at,
+          'vid': util.get(item, "venue.venue_id"),
+          'vname': util.get(item, "venue.venue_name"),
+          'city': city,
+          'uid': item.user.uid,
+          'fname': item.user.first_name,
+          'lname': item.user.last_name
+        });
       }
-      let afterwork = [];
-      // Check what counts is really | either this or items.size etc
-      if (obj && obj.response && obj.response.checkins && obj.response.checkins.count > 0) {
-        let items = obj.response.checkins.items;
-        for (let item of items) {
-          // City primarily from Untappd-checkins city, secondarily from checkins geolocation's closest city's channel
-          let city = getNearestCitysChannel(util.get(item, 'venue.location.lat'), util.get(item, 'venue.location.lng'));
-          afterwork.push({
-            'cid': item.checkin_id,
-            'time': item.created_at,
-            'vid': util.get(item, "venue.venue_id"),
-            'vname': util.get(item, "venue.venue_name"),
-            'city': city,
-            'uid': item.user.uid,
-            'fname': item.user.first_name,
-            'lname': item.user.last_name
-          });
-        }
-      }
-      return resolve(afterwork);
-    })
+    }
+    return resolve(afterwork);
   });
 }
 
@@ -152,35 +148,24 @@ function getNearestCitysChannel(lat, lng) {
   return _.head(sorted).city;
 }
 
-function sendToSlack(channel, message) {
-  slack.webhook({
-    text: message,
-    channel: channel,
-    username: botname
-  }, (err, res) => {
-    console.log(err, res);
-  });
-}
-
 exports.handler = (event, context, callback) => {
   console.log("1. Fetch feed 2. Parse afterworks 3. Build payloads 4. Send to Slack");
-  getUntappdFeed()
-  .then(parseAfterworkers)
-  .then(buildPayloads)
-  .then((resolve, reject) => {
-    resolve.map((payload) => {
-      console.log("payload:", payload);
-      slack.webhook(payload, (err, response) => {
-        console.log("SLACK response: ", response);
-        callback(null, response);
+  untappd.activityFeed()
+    .then(formatFeed)
+    .then(parseAfterworkers)
+    .then(buildPayloads)
+    .then((resolve, reject) => {
+      resolve.map((payload) => {
+        console.log("payload:", payload);
+        slack.webhook(payload, (err, response) => {
+          console.log("SLACK response: ", response);
+          callback(null, response);
+        });
       });
+    })
+    .catch(reason => {
+      console.log("ERROR reason: ", reason);
+      callback(reason, null);
     });
-  })
-  .catch(reason => {
-    console.log("ERROR reason: ", reason);
-    callback(reason, null);
-  });
 };
-
-// exports.handler(null, null, function(err, res) {});
 
