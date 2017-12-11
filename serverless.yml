@@ -1,7 +1,7 @@
 service: afterwork-alert
 
 custom:
-  tableName: afterwork-alert-table
+  # tableName: afterwork-alert-table
   region: eu-west-1
 
 provider:
@@ -11,21 +11,21 @@ provider:
   region: ${self:custom.region}
   memory: 128
   iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:Query
-        - dynamodb:BatchWriteItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:Scan
-        - dynamodb:GetItem
-      Resource: "arn:aws:dynamodb:${self:custom.region}:*:*"
+    # - Effect: Allow
+    #   Action:
+    #     - dynamodb:Query
+    #     - dynamodb:BatchWriteItem
+    #     - dynamodb:PutItem
+    #     - dynamodb:UpdateItem
+    #     - dynamodb:Scan
+    #     - dynamodb:GetItem
+    #   Resource: "arn:aws:dynamodb:${self:custom.region}:*:*"
     - Effect: Allow
       Action:
         - lambda:InvokeFunction
       Resource: "arn:aws:lambda:${self:custom.region}:*"
-  environment:
-    TABLE_NAME: ${self:custom.tableName}
+  # environment:
+  #   TABLE_NAME: ${self:custom.tableName}
 
 package:
   include:
@@ -81,19 +81,19 @@ functions:
           path: command
           method: post
 
-resources:
-  Resources:
-    AfterworkAlertDBBTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:custom.tableName}
-        AttributeDefinitions:
-          - AttributeName: checkin_id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: checkin_id
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+# resources:
+#   Resources:
+#     AfterworkAlertDBBTable:
+#       Type: AWS::DynamoDB::Table
+#       Properties:
+#         TableName: ${self:custom.tableName}
+#         AttributeDefinitions:
+#           - AttributeName: checkin_id
+#             AttributeType: S
+#         KeySchema:
+#           - AttributeName: checkin_id
+#             KeyType: HASH
+#         ProvisionedThroughput:
+#           ReadCapacityUnits: 1
+#           WriteCapacityUnits: 1
 
