@@ -26,8 +26,6 @@ const cities = process.env.CITIES.split(" ").map(value => {
 const timeFormat = 'ddd, DD MMM YYYY HH:mm:ss Z';
 
 // Create clients
-// let untappd = new UntappdClient();
-// untappd.setAccessToken(UntappdAccessToken);
 let untappd = new Untappd(UntappdAccessToken); // new library
 let slack = new Slack();
 slack.setWebhook(SlackWebhook);
