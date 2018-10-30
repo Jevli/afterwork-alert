@@ -26,7 +26,7 @@ const cities = process.env.CITIES.split(" ").map(value => {
 const timeFormat = 'ddd, DD MMM YYYY HH:mm:ss Z';
 
 const isDuringWorkTime = instant => {
-  if (instant.isoWeekday() <= 6) {
+  if (instant.isoWeekday() >= 6) {
     return false;
   }
   return instant.isBetween(instant.hours(5), instant.hours(12));
