@@ -25,6 +25,13 @@ const cities = process.env.CITIES.split(" ").map(value => {
 
 const timeFormat = 'ddd, DD MMM YYYY HH:mm:ss Z';
 
+const isDuringWorkTime = instant => {
+  if (instant.isoWeekday() >= 6) {
+    return false;
+  }
+  return instant.isBetween(instant.hours(5), instant.hours(12));
+}
+
 // Create clients
 let untappd = new Untappd(UntappdAccessToken); // new library
 let slack = new Slack();
@@ -115,9 +122,9 @@ function buildPayloads(afterwork) {
       persons = persons.slice(0, -2);
       // build payload
       // TODO find better way to save {city: channel} -values
-      var channel = process.env[util.removeDiacritics("CHANNEL_" + venue[0].city.toUpperCase())] || fallbackChannel;
-      var text = "";
-      if (moment().isBetween(moment().hours(5), moment().hours(12))) {
+      let channel = process.env[util.removeDiacritics("CHANNEL_" + venue[0].city.toUpperCase())] || fallbackChannel;
+      let text = "";
+      if (isDuringWorkTime(moment())) {
         // something like this. Hopefully works.
         channel = duringworkChannel;
         text = 'Oh my! ' + venue.length + ' persons drinking together within work hours at venue ' + venue[0].vname + ' (' + persons + ')';
